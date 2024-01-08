@@ -15,11 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->string('prenom');
-            $table->string('adresse');
-            $table->string('telephone');
-            $table->string('genre');
-            $table->string('date_naissance');
-            $table->string('email')->unique();
+            $table->string('phone');
+            $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('avatar')->default('avatars/pp.png');
@@ -28,9 +25,7 @@ return new class extends Migration
             $table->timestamps();
         });
         
-        Schema::table('tontines', function (Blueprint $table){
-            $table->foreignId('user_id')->after('type')->default(3);
-        });
+       
     }
 
     /**

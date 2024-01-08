@@ -21,10 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'nom',
         'prenom',
-        'adresse',
-        'genre',
-        'telephone',
-        'date_naissance',
+        'phone',
         'email',
         'password',
         'avatar',
@@ -52,8 +49,7 @@ class User extends Authenticatable
     ];
 
      CONST ROLE_ADMIN = 1;
-    CONST ROLE_GESTION = 2;
-    CONST ROLE_MEMBRE = 3;
+    CONST ROLE_USER = 2;
 
     public function tontines()
     {

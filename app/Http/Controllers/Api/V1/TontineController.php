@@ -8,41 +8,56 @@ use App\Http\Controllers\Controller;
 
 class TontineController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+   
     public function index()
     {
         $tontine =  Tontine::all();
+
+        return response()->json(['tontine' => $tontine]);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    
     public function store(Request $request)
     {
-        //
+        $request->validate([
+        'nom' => 'required',
+        'nombre_personne' => 'required',
+        'type' => 'required',
+        'date_debut' => 'required',
+        'date_fin' => 'required',
+        ]);
+
+            $tontine = Tontine::create([
+                'user_id' => auth()->id(),
+                'nombre_personne' => $request->nombre_personne,
+                'type' => $request->type,
+                'date_debut' => $request->date_debut,
+                'date_fin' => $request->date_fin,
+            ]);
+
+                    return response()->json(['tontine' => $tontine]);
+
     }
 
-    /**
-     * Display the specified resource.
-     */
+   
     public function show(string $id)
     {
-        //
+                $tontine= Tontine::find($id);
+                 if (!$tontine) {
+            return response()->json(['message' => 'tontine not found'], 404);
+        }
+
+        return response()->json(['tontine' => $tontine]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+   
     public function update(Request $request, string $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+   
     public function destroy(string $id)
     {
         //

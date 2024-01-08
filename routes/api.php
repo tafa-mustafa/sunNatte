@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\{LoginController, RegisterController};
+use App\Http\Controllers\Api\V1\{LoginController, RegisterController, UserController};
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +16,15 @@ use App\Http\Controllers\Api\V1\{LoginController, RegisterController};
 */
 Route::post('/users/login', [LoginController::class, 'login']);
 Route::post('/users/register', [RegisterController::class, 'register']);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/mobile/sendCode', [RegisterController::class, 'mobile']);
+Route::post('/mobile/verify', [RegisterController::class, 'verify']);
+
+Route::group(['middleware' => 'auth:sanctum'], function (){
+
+Route::post('/users/logout', [UserController::class, 'logout']);
+Route::put('/users/update/password', [UserController::class, 'update_pass']);
+Route::put('/users/update/profile/{id}', [UserController::class, 'update']);
+Route::get('/users/profile', [UserController::class, 'moi']);
+
+
 });

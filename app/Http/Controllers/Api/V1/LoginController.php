@@ -16,7 +16,7 @@ class LoginController extends Controller
 {
      public function login(LoginRequest $request){
 
-        if (!Auth::attempt($request->only(['telephone', 'password','statut' => 1]))){
+        if (!Auth::attempt($request->only('phone', 'password'))){
             Helper::sendError('telephone ou password invalide');
 
         }
@@ -31,7 +31,7 @@ class LoginController extends Controller
                 $success['nom'] = $user->nom;
                 $success['prenom'] = $user->prenom;
                 $success['email'] = $user->email;
-                $success['telephone'] = $user->telephone;
+                $success['phone'] = $user->phone;
                 $success['statut'] = $user->statut; 
          return response()->json($success);
   
