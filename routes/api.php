@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\{LoginController, RegisterController, UserController};
+use App\Http\Controllers\Api\V1\{LoginController, RegisterController, UserController,ForgotPasswordController};
 
 /*
 |--------------------------------------------------------------------------
@@ -22,9 +22,12 @@ Route::post('/mobile/verify', [RegisterController::class, 'verify']);
 Route::group(['middleware' => 'auth:sanctum'], function (){
 
 Route::post('/users/logout', [UserController::class, 'logout']);
-Route::put('/users/update/password', [UserController::class, 'update_pass']);
-Route::put('/users/update/profile/{id}', [UserController::class, 'update']);
+Route::post('/users/update/password', [UserController::class, 'update_pass']);
+Route::post('/users/update/profile/{user}', [UserController::class, 'update']);
 Route::get('/users/profile', [UserController::class, 'moi']);
+Route::post('/users/send-otp', [ForgotPasswordController::class, 'sendResetCode']);
+Route::post('/users/reset-password', [ForgotPasswordController::class, 'resetPassword']);
+
 
 
 });

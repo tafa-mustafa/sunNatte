@@ -8,74 +8,78 @@ use App\Rules\MatchOldPassword;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Validator;
+use Illuminate\Validation\Validator;
+use App\Http\Requests\UpdateUserRequest;
+  use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-     public function update(Request $request, $id)
-    {
 
-        
-         try {
+public function update(UpdateUserRequest $request, User $user)
+{
+    try {
+        // Start a database transaction
+        DB::beginTransaction();
 
-           
-                    $validatedData= Validator::make($request->all(),[
+        // Update the user attributes
+        $user->update($request->only([
+            'nom', 'prenom', 'phone', 'email', 'password', 'avatar',
+            'statut', 'profession', 'adresse', 'num_cni', 'num_passport',
+            'phone2', 'bank', 'preuve_fond'
+        ]));
 
-                        'nom' => '',
-                        'prenom'        => '',
-                        'phone' => 'required|phone|unique:users,id,' .$request->user()->id,                    
-                        'avatar' => ''
-                    ]) ;       
-                    if($validatedData->fails()){
+        // Update avatar if provided
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            $file_name = time() . '.' . $request->avatar->extension();
+            $destinationPath = public_path('avatars');
+            $request->avatar->move($destinationPath, $file_name);
+            $user->update(['avatar' => "avatars/$file_name"]);
+        }
 
-                        $error =$validatedData->errors()->all()[0];
+       if ($request->hasFile('preuve_fond') && $request->file('preuve_fond')->isValid()) {
+            $file_name = time() . '.' . $request->preuve_fond->extension();
+            $destinationPath = public_path('users');
+            $request->preuve_fond->move($destinationPath, $file_name);
+            $user->preuve_fond = "users/$file_name";
+        }
 
-                        return response()->json(['statut'=>'false', 'message'=> $error, 'data'=>[]], 422);
-                    }
-                    else{
+        // Save the changes to the user model
+        $user->save();
 
-                    $user = User::find($id);
+        // Commit the transaction
+        DB::commit();
 
-                    $user-> nom= $request->nom;
-                    $user-> prenom= $request->prenom;
-                    $user-> date_naissance= $request->date_naissance;
-                    $user-> phone= $request->phone;
-                    $user-> password= bcrypt($request->password);
+        // Fetch the updated user
+        $user = $user->fresh();
 
+        // Prepare success response
+        $success = [
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'phone2' => $user->phone2,
+            'avatar' => $user->avatar,
+            'adresse' => $user->adresse,
+            'profession' => $user->profession,
+            'preuve_fond' => $user->preuve_fond,
+            'num_cni' => $user->num_cni,
+            'num_passport' => $user->num_passport,
+            'phone' => $user->phone,
+        ];
 
-                    if($request->avatar && $request->avatar->isValid()){
+        return response()->json(['status' => true, 'message' => 'User updated successfully', 'data' => $success]);
+    } catch (\Exception $e) {
+        // Rollback the transaction in case of an exception
+        DB::rollBack();
 
-                        $file_name =time(). '.'.$request->avatar->extension();
-                        $destinationPath = public_path('avatars');
-                        $request->avatar->move($destinationPath , $file_name);
-                        $path = "public/avatars/$file_name";
-                        $user->avatar = $path;
-                    }
-
-                    
-                    $user->update();
-                    $success['nom'] = $user->nom;
-                    $success['prenom'] = $user->prenom;
-                    $success['phone'] = $user->phone;
-                    $success['role'] = $user->role->name;
-                    $success['avatar'] = $user->avatar;
-
-                    return response($success);
-                } 
-             }
-         catch(\Exception $e){
-
-            return response()->json([
-
-                'statut'=> false,
-                    'message'=> $e->getMessage() ,
-                    'data'=>[]
-            ], 500);
-
-          }
-
-
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage(),
+            'data' => [],
+        ], 500);
     }
+}
+
     public function logout(Request $request)
 
     {
@@ -117,6 +121,9 @@ public function moi(Request $request)
         $success['nom'] = $user->nom;
                     $success['prenom'] = $user->prenom;
                     $success['phone'] = $user->phone;
+                    $success['avatar'] = $user->avatar;
+                    $success['profession'] = $user->profession;
+                    $success['adresse'] = $user->adresse;
                     $success['avatar'] = $user->avatar;
         return $success;
 
