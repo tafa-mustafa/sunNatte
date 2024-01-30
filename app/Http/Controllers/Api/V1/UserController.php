@@ -25,7 +25,7 @@ public function update(UpdateUserRequest $request, User $user)
         $user->update($request->only([
             'nom', 'prenom', 'phone', 'email', 'password', 'avatar',
             'statut', 'profession', 'adresse', 'num_cni', 'num_passport',
-            'phone2', 'bank', 'preuve_fond'
+            'phone2', 'bank', 
         ]));
 
         // Update avatar if provided
@@ -36,12 +36,6 @@ public function update(UpdateUserRequest $request, User $user)
             $user->update(['avatar' => "avatars/$file_name"]);
         }
 
-       if ($request->hasFile('preuve_fond') && $request->file('preuve_fond')->isValid()) {
-            $file_name = time() . '.' . $request->preuve_fond->extension();
-            $destinationPath = public_path('users');
-            $request->preuve_fond->move($destinationPath, $file_name);
-            $user->preuve_fond = "users/$file_name";
-        }
 
         // Save the changes to the user model
         $user->save();
@@ -61,7 +55,6 @@ public function update(UpdateUserRequest $request, User $user)
             'avatar' => $user->avatar,
             'adresse' => $user->adresse,
             'profession' => $user->profession,
-            'preuve_fond' => $user->preuve_fond,
             'num_cni' => $user->num_cni,
             'num_passport' => $user->num_passport,
             'phone' => $user->phone,
@@ -127,5 +120,28 @@ public function moi(Request $request)
                     $success['avatar'] = $user->avatar;
         return $success;
 
+    }
+
+
+
+public function show(Request $request, User $user)
+    {        $users = User::find($user);
+
+        if (!$users) {
+            return response()->json(['message' => 'user not found'], 404);
+        }
+        $success = [
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'phone2' => $user->phone2,
+            'avatar' => $user->avatar,
+            'adresse' => $user->adresse,
+            'profession' => $user->profession,
+            'num_cni' => $user->num_cni,
+            'num_passport' => $user->num_passport,
+            'phone' => $user->phone,
+        ];
+        return response()->json($success);
     }
 }

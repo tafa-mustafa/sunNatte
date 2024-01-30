@@ -20,7 +20,7 @@ class ForgotPasswordController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
 
-        $code = rand(1111, 9999);; // Generate a random 4-digit code
+        $code = rand(1111, 9999); // Generate a random 4-digit code
 
         $user->update(['reset_code' => $code]);
         $this->sendSms($user->phone, $code);

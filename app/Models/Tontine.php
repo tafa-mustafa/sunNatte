@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
-use App\Models\User;
+use App\Models\{Adhesion,User};
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Tontine extends Model
 {
@@ -15,14 +19,30 @@ class Tontine extends Model
             'nom',
             'nombre_personne',
             'type',
-            'date_debut',
-            'date_fin',
+            'duree',
+            'montant',
+            'tirage',
             'statut',
-            'adhesion_id'
+            'code_adhesion',
+            'materiel_id',
         ];
 
-        public function user(){
+      
+    public function users(): BelongsToMany
 
-        return $this->belongsTo(User::class);
-        }
+    {
+
+        return $this->belongsToMany(User::class, 'adhesions', 'tontine_id', 'user_id');
+
+    }
+
+     public function adhesions():hasMany
+    {
+        return $this->hasMany(Adhesion::class);
+    }
+
+    public function materiel(): BelongsTo
+    {
+        return $this->belongsTo(Materiel::class);
+    }
 }

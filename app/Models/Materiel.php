@@ -3,22 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Document extends Model
+class Materiel extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'nom',
-        'document',
-        'user_id'
+        'image',
         
+
     ];
 
-    public function user(): BelongsTo
+    public function tontines(): HasMany
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(Tontine::class, 'materiel_id');
     }
 }

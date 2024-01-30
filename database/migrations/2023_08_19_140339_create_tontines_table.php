@@ -16,9 +16,13 @@ return new class extends Migration
             $table->string('nom');
             $table->string('nombre_personne');
             $table->string('type');
-            $table->string('date_debut');
-            $table->string('date_fin');
+            $table->string('duree');
+            $table->string('montant');
+            $table->string('tirage');
+            $table->string('code_adhesion')->unique();
             $table->boolean('statut')->default(true);
+            $table->unsignedBigInteger('materiel_id')->nullable();
+            $table->foreign('materiel_id')->references('id')->on('materiels');
             $table->timestamps();
         });
     }

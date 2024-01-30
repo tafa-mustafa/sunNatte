@@ -25,10 +25,10 @@ return new class extends Migration
             $table->string('num_cni')->nullable();
             $table->string('num_passport')->nullable();
             $table->string('reset_code')->nullable();
-            $table->string('preuve_fond')->nullable();
             $table->string('bank')->nullable();
             $table->string('phone2')->nullable();
             $table->boolean('statut')->default(true);
+            $table->string('badge')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

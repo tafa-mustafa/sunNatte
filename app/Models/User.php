@@ -3,12 +3,15 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Tontine;
+use App\Models\{Tontine, Adhesion};
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Model;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -18,7 +21,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-   protected $fillable = ['nom','password', 'prenom',"phone", 'profession', 'adresse', 'num_cni', 'num_passport', 'bank', 'phone2', 'avatar', 'preuve_fond','reset_code'];
+   protected $fillable = ['nom','password', 'prenom',"phone", 'profession', 'adresse', 'num_cni', 'num_passport', 'bank', 'phone2', 'avatar','reset_code','badge'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -43,14 +46,26 @@ class User extends Authenticatable
      CONST ROLE_ADMIN = 1;
     CONST ROLE_USER = 2;
 
-    public function tontines()
-    {
-      return $this->hasMany(Tontine::class);
-    }
-
+   
     public function roles()
     {
       return $this->hasMany(Role::class);
     }
+
+        public function tontines(): BelongsToMany
+    {
+
+        return $this->belongsToMany(Tontine::class, 'adhesions', 'user_id','tontine_id');
+
+    }
     
+  public function adhesions(): hasMany
+    {
+        return $this->hasMany(Adhesion::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'user_id');
+    }
 }
