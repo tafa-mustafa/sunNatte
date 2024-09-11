@@ -12,7 +12,9 @@ class Contribution extends Model
     protected $fillable = [
         'montant',
         'tontine_id',
-        'user_id'
+        'user_id',
+        'transaction_id'
+    
 
     ];
 }
