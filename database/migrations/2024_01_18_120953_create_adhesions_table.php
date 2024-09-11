@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('adhesions', function (Blueprint $table) {
             $table->id();
+            $table->string('badge')->nullable();
              $table->unsignedBigInteger('tontine_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();

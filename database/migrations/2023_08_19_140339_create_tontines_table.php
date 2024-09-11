@@ -20,7 +20,10 @@ return new class extends Migration
             $table->string('montant');
             $table->string('tirage');
             $table->string('code_adhesion')->unique();
-            $table->boolean('statut')->default(true);
+            $table->string('date_demarrage')->nullable();
+            $table->string('date_fin')->nullable();
+            $table->text('description')->nullable();
+            $table->boolean('statut')->nullable();
             $table->unsignedBigInteger('materiel_id')->nullable();
             $table->foreign('materiel_id')->references('id')->on('materiels');
             $table->timestamps();

@@ -28,7 +28,6 @@ return new class extends Migration
             $table->string('bank')->nullable();
             $table->string('phone2')->nullable();
             $table->boolean('statut')->default(true);
-            $table->string('badge')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

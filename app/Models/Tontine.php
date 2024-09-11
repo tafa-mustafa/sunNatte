@@ -25,6 +25,9 @@ class Tontine extends Model
             'statut',
             'code_adhesion',
             'materiel_id',
+            'date_demarrage',
+            'date_fin',
+            'description',
         ];
 
       

@@ -8,4 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Contribution extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'montant',
+        'tontine_id',
+        'user_id'
+
+    ];
 }

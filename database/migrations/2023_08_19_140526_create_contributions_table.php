@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create('contributions', function (Blueprint $table) {
             $table->id();
             $table->string('montant');
-            $table->foreignId('user_id');
-            $table->string('date_contribution');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('tontine_id');
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('tontine_id')->references('id')->on('tontines')->onDelete('cascade');
+
         });
     }
 
