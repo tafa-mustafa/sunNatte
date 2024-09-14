@@ -17,7 +17,7 @@ class ContributionController extends Controller
         $montant = round($tontine->montant / $tontine->nombre_personne, 2);
 
         // Créer la session de paiement via l'API Wave
-       /*  $response = Http::withHeaders([
+        $response = Http::withHeaders([
             "Authorization" => "Bearer " . env('WAVE_API_KEY'),
             "Content-Type" => "application/json"
         ])->post("https://api.wave.com/v1/checkout/sessions", [
@@ -37,7 +37,7 @@ class ContributionController extends Controller
         // Vérifier si 'wave_launch_url' est présent dans la réponse
         if (!isset($checkout_session['wave_launch_url'])) {
             return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
-        } */
+        }
 
         // Utiliser une transaction pour sécuriser l'enregistrement des données
         DB::beginTransaction();
@@ -53,18 +53,33 @@ class ContributionController extends Controller
             DB::commit();
 
             return response()->json([
-                /* 'wave_launch_url' => $checkout_session['wave_launch_url'],
+                'wave_launch_url' => $checkout_session['wave_launch_url'],
                 'transaction_id' => $checkout_session['transaction_id'] ?? null, 
                 'amount' => $checkout_session['amount'],
-                'currency' => $checkout_session['currency'], */
-
-                'payement reussi !'
+                'currency' => $checkout_session['currency'],
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'Erreur lors de l\'enregistrement de la contribution.'], 500);
         }
     }
+
+
+    public function getContributionsByTontine(Tontine $tontine)
+    {
+        $user = auth()->user();
+
+        $contributions = Contribution::where('tontine_id', $tontine->id)
+            ->where('user_id', $user->id)
+            ->get();
+
+        if ($contributions->isEmpty()) {
+            return response()->json(['message' => 'Aucune contribution trouvée pour cette tontine.'], 404);
+        }
+
+        return response()->json($contributions);
+    }
+
 
     public function success(Request $request)
     {

@@ -58,6 +58,7 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
 /****************Contribution ***********************************/
 
     Route::post('tontines/{tontine}/contribute', [ContributionController::class, 'contribute'])->name('tontine.contribute');
+    Route::post('tontines/{tontine}/mycontributes', [ContributionController::class, 'getContributionsByTontine']);
     Route::get('payment/success', [ContributionController::class, 'success'])->name('payment.success');
     Route::get('payment/error', [ContributionController::class, 'error'])->name('payment.error');
 
