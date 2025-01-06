@@ -36,7 +36,7 @@ class TontineController extends Controller
                     'nombre_membres_actuels' => $tontine->users->count() - 1,
                     'nombre_restant' => max(0, $tontine->nombre_personne - $tontine->users->count() - 1),
                     'type' => $tontine->type,
-                    'code_adhesion' => $tontine->code_adhesion,              
+                    'code_adhesion' => $tontine->code_adhesion,
                     'duree' => $tontine->duree,
                     'montan' => $tontine->montant,
                     'materiel_image' => $tontine->materiel ? $tontine->materiel->image : null,
@@ -63,7 +63,7 @@ class TontineController extends Controller
     {
         try {
             $tontines = Tontine::where('date_fin', '<', Carbon::now())->get();
-            return response()->json( $tontines);
+            return response()->json($tontines);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Erreur lors de la récupération des tontines', 'error' => $e->getMessage()], 500);
         }
@@ -87,28 +87,28 @@ class TontineController extends Controller
             'nom' => 'required',
             'nombre_personne' => 'required',
             'type' => 'required',
-            'duree' => 'required',
-            'montant' => 'required',
+            'duree' => 'required|integer|min:1',
+            'montant' => 'required|numeric|min:1',
             'tirage' => 'required',
             'code_adhesion' => 'nullable|unique:tontines',
-            'materiel_id' => 'nullable',
-            'date_demarrage' => 'nullable|date',
-            'date_fin' => 'nullable|date',
+            'materiel_id' => 'nullable|exists:materiels,id',
+            'date_demarrage' => 'nullable|date|after_or_equal:today',
+            'date_fin' => 'nullable|date|after:date_demarrage',
             'description' => 'nullable',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $codeAdhesion = Str::random(10);
-
-            // Validation de la date de démarrage
+            // Vérification et formatage des dates
             $dateDemarrage = Carbon::parse($request->date_demarrage);
-            $dateFin = $dateDemarrage->copy()->addMonths($request->duree);
+            $dateFin = $request->date_fin
+                ? Carbon::parse($request->date_fin)
+                : $dateDemarrage->copy()->addMonths($request->duree);
 
-            // Formatage des dates
-            $dateDemarrageFormat = $dateDemarrage->format('d-m-y');
-            $dateFinFormat = $dateFin->format('d -m-y');
+            if ($dateFin <= $dateDemarrage) {
+                return response()->json(['message' => 'La date de fin doit être postérieure à la date de début.'], 422);
+            }
 
             $tontine = Tontine::create([
                 'nom' => $request->nom,
@@ -117,29 +117,27 @@ class TontineController extends Controller
                 'duree' => $request->duree,
                 'montant' => $request->montant,
                 'tirage' => $request->tirage,
-                'code_adhesion' => $codeAdhesion,
+                'code_adhesion' => Str::random(10),
                 'materiel_id' => $request->materiel_id,
-                'date_demarrage' => $dateDemarrageFormat,
-                'date_fin' => $dateFinFormat,
+                'date_demarrage' => $dateDemarrage->format('Y-m-d'),
+                'date_fin' => $dateFin->format('Y-m-d'),
                 'description' => $request->description,
             ]);
 
             $createur = Auth::user();
-
             $tontine->users()->attach($createur->id);
-
             $createur->adhesions()->update(['badge' => 'proprio']);
-           DB::commit();
 
-        return response()->json('tontine created !!');
-            
+            DB::commit();
+
+            return response()->json(['message' => 'Tontine créée avec succès!'], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
-
-            return response()->json(['message' => 'Erreur lors de la création de la tontine : ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Erreur lors de la création de la tontine', 'error' => $e->getMessage()], 500);
         }
     }
+
 
 
 
@@ -147,19 +145,19 @@ class TontineController extends Controller
     public function adhesion(Request $request, Tontine $tontine)
     {
 
-       // $createur = $tontine->users()->withPivot('badge' = 'systems')->get();
+        // $createur = $tontine->users()->withPivot('badge' = 'systems')->get();
         if ($tontine->users->count() >= $tontine->nombre_personne) {
             return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
         }
-       
+
         $codeAdhesion = $request->input('code_adhesion');
-        
+
         if ($tontine->code_adhesion !== $codeAdhesion) {
             return response()->json(['message' => 'Code d\'adhésion incorrect.'], 422);
         }
         $createur = $tontine->users()->first(); // Supposons que le premier utilisateur de la tontine est le créateur
         $createur->notify(new TontineNotification($tontine, [])); // Passez un tableau vide si aucune donnée supplémentaire n'est nécessaire      
-          $users = auth()->user();
+        $users = auth()->user();
         $badgeActuel = $users->adhesions()->where('tontine_id', $tontine->id)->value('badge');
 
         if (!$tontine->users->contains($users)) {
