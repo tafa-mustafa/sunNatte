@@ -14,10 +14,15 @@ return new class extends Migration
         Schema::create('tirelires', function (Blueprint $table) {
             $table->id();
             $table->string('montant');
-            $table->string('nom')->default('tirelire');
-            $table->foreignId('user_id');
+            $table->string('titre')->default('tirelire');
+            $table->string('objectif')->nullable();
+            $table->string('montant_objectif')->nullable();
             $table->string('date_debut');
             $table->string('date_fin');
+            $table->unsignedBigInteger('user_id');
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
             $table->timestamps();
         });
     }
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tirelires');
+        Schema::dropIfExists('tirelires'); // Exemple si transactions dépend de tirelires
     }
 };

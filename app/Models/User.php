@@ -59,6 +59,13 @@ class User extends Authenticatable
 
     }
     
+    
+    public function contributions()
+{
+    return $this->hasMany(Contribution::class);
+}
+
+    
   public function adhesions(): hasMany
     {
         return $this->hasMany(Adhesion::class);
@@ -68,4 +75,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class, 'user_id');
     }
+    
+    public function tirages()
+{
+    return $this->hasMany(Tirage::class);
+}
+
+
+public function tirelires()
+{
+    return $this->hasMany(Tirelire::class);
+}
+
 }

@@ -74,7 +74,7 @@ class RegisterController extends Controller
 {
     $code = rand(1111, 9999);
 
-    $phoneNumber = $request->phone; // Use $request->phone instead of $request->telephone
+    $phoneNumber = $request->phone;
 
     $user = new Number;
     $user->phone = $phoneNumber;

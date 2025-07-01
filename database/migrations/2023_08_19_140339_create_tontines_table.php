@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('type');
             $table->string('duree');
             $table->string('montant');
-            $table->string('tirage');
+            $table->string('type_tirage')->nullable();
+            $table->text('tirage')->nullable();
             $table->string('code_adhesion')->unique();
             $table->string('date_demarrage')->nullable();
             $table->string('date_fin')->nullable();

@@ -35,9 +35,18 @@ class Tontine extends Model
 
     {
 
-        return $this->belongsToMany(User::class, 'adhesions', 'tontine_id', 'user_id');
+        return $this->belongsToMany(User::class, 'adhesions', 'tontine_id', 'user_id')
+        
+        ->withPivot('badge')
+                ->withTimestamps();
 
     }
+    
+    public function contributions()
+{
+    return $this->hasMany(Contribution::class);
+}
+
 
      public function adhesions():hasMany
     {
@@ -48,4 +57,20 @@ class Tontine extends Model
     {
         return $this->belongsTo(Materiel::class);
     }
+    
+    public function tirages()
+{
+    return $this->hasMany(Tirage::class);
+}
+
+
+
+
+
+
+
+
+
+
+
 }

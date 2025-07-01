@@ -37,6 +37,13 @@ class AdminController extends Controller
     
     }
 
+ public function test(Request $request){
+
+       
+         return response()->json('test me');
+  
+    
+    }
 
     public function list_users()
     {
@@ -112,22 +119,23 @@ public function show_user(Request $request, User $user){
             ], 500);
         }
     }
-    public function list_tontine()
-    {
-        try {
-            $tontines = Tontine::where('statut', 1)->get();
 
-                return response()->json(
-                    $tontines);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erreur lors de la récupération des tontines',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+public function list_tontine()
+{
+    try {
+       $tontines = Tontine::whereHas('users', function ($query) {
+    $query->where('adhesions.badge', 'systems');
+})
+->where('statut', 1)
+->get();
+        return response()->json($tontines);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Erreur lors de la récupération des tontines',
+            'error' => $e->getMessage(),
+        ], 500);
     }
-
+}
 
     
     public function store_tontine(Request $request)

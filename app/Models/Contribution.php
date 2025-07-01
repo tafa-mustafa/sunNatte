@@ -13,8 +13,21 @@ class Contribution extends Model
         'montant',
         'tontine_id',
         'user_id',
-        'transaction_id'
+        'transaction_id',
+        'date_contribution'
     
 
     ];
+    
+    protected $dates = ['date_contribution'];
+    
+     public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function tontine()
+    {
+        return $this->belongsTo(Tontine::class);
+    }
 }
