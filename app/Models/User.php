@@ -44,7 +44,7 @@ class User extends Authenticatable
     ];
 
      CONST ROLE_ADMIN = 1;
-    CONST ROLE_USER = 2;
+     CONST ROLE_USER = 2;
 
    
     public function roles()
