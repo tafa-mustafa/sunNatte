@@ -115,7 +115,7 @@ class ContributionController extends Controller
     
     
     
-      public function getToken(Request $request)
+      public function getTokens(Request $request)
     {
         // En-têtes nécessaires pour l'API Wave
         $headers = [
@@ -127,8 +127,7 @@ class ContributionController extends Controller
         $data = [
             "amount" => $request->input('amount', 1000), // Exemple : Montant par défaut 1000
             "currency" => $request->input('currency', 'XOF'), // Exemple : Devise par défaut XOF
-            "error_url" => route('payment.error'),
-            "success_url" => route('payment.success'),
+           
         ];
 
         // Envoyer la requête à l'API Wave
@@ -147,9 +146,69 @@ class ContributionController extends Controller
             'details' => $response->json(),
         ], $response->status());
     }
-    
-    
-    
+
+
+    public function getToken(Request $request)
+    {
+        // ✅ Valider les entrées
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1', // Le montant doit être supérieur à 0
+            'currency' => 'nullable|string|in:XOF,USD,EUR', // Devise autorisée
+        ]);
+
+        $amount = 10;
+        $currency = 'XOF'; // Devise par défaut : XOF
+
+        // ✅ Vérifier si la clé API existe
+        $waveApiKey = env('WAVE_API_KEY');
+        if (empty($waveApiKey)) {
+            return response()->json([
+                'error' => 'Clé API Wave manquante.',
+            ], 500);
+        }
+
+        try {
+            // En-têtes nécessaires pour l'API Wave
+            $headers = [
+                "Authorization" => "Bearer " . $waveApiKey,
+                "Content-Type" => "application/json",
+            ];
+
+            // Données envoyées dans le corps de la requête
+            $data = [
+                "amount" => (string) $amount, // ⚠️ Wave attend une string
+                "currency" => $currency,
+            ];
+
+            // Envoyer la requête à l'API Wave
+            $response = Http::withHeaders($headers)
+                ->post("https://api.wave.com/v1/checkout/sessions", $data);
+
+            // ✅ Vérifier la réponse
+            if ($response->successful()) {
+                return response()->json([
+                    'message' => 'Token récupéré avec succès.',
+                    'data' => $response->json()
+                ]);
+            }
+
+            // ❌ Cas d'erreur : retour API non successful
+            return response()->json([
+                'error' => 'Impossible de récupérer le token.',
+                'details' => $response->json(),
+            ], $response->status());
+
+        } catch (\Exception $e) {
+            // ❌ Gestion des exceptions Laravel/Http
+            return response()->json([
+                'error' => 'Erreur lors de la communication avec l’API Wave.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
     public function initiateContribution(Request $request, Tontine $tontine)
 {
     $user = auth()->user();
