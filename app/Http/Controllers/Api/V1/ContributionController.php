@@ -115,7 +115,7 @@ class ContributionController extends Controller
     
     
     
-      public function getTokens(Request $request)
+    public function getToken(Request $request)
     {
         // En-têtes nécessaires pour l'API Wave
         $headers = [
@@ -127,7 +127,8 @@ class ContributionController extends Controller
         $data = [
             "amount" => $request->input('amount', 1000), // Exemple : Montant par défaut 1000
             "currency" => $request->input('currency', 'XOF'), // Exemple : Devise par défaut XOF
-           
+            "error_url" => route('payment.error'),
+            "success_url" => route('payment.success'),
         ];
 
         // Envoyer la requête à l'API Wave
@@ -148,7 +149,9 @@ class ContributionController extends Controller
     }
 
 
-    public function getToken(Request $request)
+
+
+    public function getTokens(Request $request)
     {
         // ✅ Valider les entrées
         $validated = $request->validate([
@@ -160,7 +163,9 @@ class ContributionController extends Controller
         $currency = 'XOF'; // Devise par défaut : XOF
 
         // ✅ Vérifier si la clé API existe
-        $waveApiKey = env('WAVE_API_KEY');
+        $waveApiKey = env(key: "WAVE_API_KEY");
+
+
         if (empty($waveApiKey)) {
             return response()->json([
                 'error' => 'Clé API Wave manquante.',
