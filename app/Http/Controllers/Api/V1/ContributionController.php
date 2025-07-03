@@ -22,7 +22,7 @@ class ContributionController extends Controller
         "Authorization" => "Bearer " . env('WAVE_API_KEY'),
         "Content-Type" => "application/json"
     ])->post("https://api.wave.com/v1/checkout/sessions", [
-        "amount" => $montant,
+        "amount" => round($montant * 0.96, 2),
         "currency" => "XOF",
         "error_url" => route('payment.error', [], true), // Forcer HTTPS
         "success_url" => route('payment.success', [], true), // Forcer HTTPS
@@ -45,7 +45,7 @@ class ContributionController extends Controller
 
     try {
         // Créer la contribution
-        $contribution = Contribution::create([
+        $contribution = Contribution::create(attributes: [
             'user_id' => $user->id,
             'tontine_id' => $tontine->id,
             'montant' => $montant,

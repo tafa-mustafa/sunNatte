@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
+use App\Http\Controllers\Api\V1\Admin\TarifController;
 use App\Http\Controllers\Api\V1\ContributionController;
 use App\Http\Controllers\Api\V1\{LoginController, RegisterController, UserController,ForgotPasswordController, TontineController,TirelireController};
 
@@ -22,8 +23,16 @@ Route::post('admin/login', [AdminController::class, 'login_user']);
 Route::get('admin/test', [AdminController::class, 'test']);
     Route::get('payment/success', [ContributionController::class, 'success'])->name('payment.success');
     Route::get('payment/error', [ContributionController::class, 'error'])->name('payment.error');
-Route::get('tontine/contribution/success', [ContributionController::class, 'success'])->name('payment.success');
+/* Route::get('tontine/contribution/success', [ContributionController::class, 'success'])->name('payment.success');
 Route::get('tontine/contribution/error', [ContributionController::class, 'error'])->name('payment.error');
+ */
+Route::prefix('admin')->middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::get('/tarifs', [TarifController::class, 'index']);
+    Route::post('/tarifs', [TarifController::class, 'store']);
+    Route::get('/tarifs/{tarif}', [TarifController::class, 'show']);
+    Route::put('/tarifs/{tarif}', [TarifController::class, 'update']);
+    Route::delete('/tarifs/{tarif}', [TarifController::class, 'destroy']);
+});
 
 Route::post('/users/login', [LoginController::class, 'login']);
 Route::post('/users/register', [RegisterController::class, 'register']);
