@@ -96,7 +96,6 @@ class TirelireController extends Controller
     */
     // 💵 Montant après commission (optionnel à afficher)
     $montantNet = $montant + $commission;
-dd($montantNet);
 
     // 🌀 Créer la session Wave
     $response = Http::withHeaders([
