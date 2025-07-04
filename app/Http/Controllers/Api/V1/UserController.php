@@ -20,6 +20,9 @@ use App\Http\Requests\UpdateUserRequest;
 class UserController extends Controller
 {
 
+    
+
+
     public function update(Request $request, User $user)
     {
         try {
@@ -117,21 +120,7 @@ class UserController extends Controller
         /* @var User */
         $user = $request->user();
         $notifications= $user->unreadNotifications;
-   /**  foreach ($notifications as $notification) {
-
-            $createdAt = new \DateTime($notification->created_at);
-            $now = new \DateTime();
-
-            // Calculer la différence entre la date de création et maintenant
-            $interval = $now->diff($createdAt);
-
-            // Ajouter les informations dans un tableau
-            $notificationData['time'] = $interval->format('%h hours, %i minutes, %s seconds ago');
-
-            $notificationsData[] = $notificationData;
-            return response()->json([$notificationData , $notification]);
-    }
-**/
+   
         return response()->json([$notifications]);
 
     }

@@ -68,59 +68,88 @@ class TontineController extends Controller
             return response()->json(['message' => 'Erreur lors de la récupération des tontines', 'error' => $e->getMessage()], 500);
         }
     }
-    
- 
+
+
     public function index()
-{
-    $user = auth()->user();
+    {
+        try {
+            $user = auth()->user();
 
-    // Charger uniquement les tontines où l'utilisateur est membre
-    $tontines = $user->tontines()->with(['users' => function ($query) {
-        $query->withPivot('badge');
-    }])->get();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Utilisateur non authentifié.',
+                    'data' => []
+                ], 401);
+            }
 
-    // Transformer les tontines pour inclure les informations nécessaires
-    $data = $tontines->map(function ($tontine) {
-        return [
-            'id' => $tontine->id,
-            'nom' => $tontine->nom,
-            'code_adhesion' => $tontine->code_adhesion,
-            'nombre_personne' => $tontine->nombre_personne,
-            'nombre_membres_actuels' => $tontine->users->count(),
-            'nombre_restant' => max(0, $tontine->nombre_personne - $tontine->users->count()),
-            'duree' => $tontine->duree,
-            'montant' => $tontine->montant,
-            'type' => $tontine->type,
-            'tirage' => $tontine->tirage,
+            // Charger uniquement les tontines où l'utilisateur est membre
+            $tontines = $user->tontines()->with([
+                'users' => function ($query) {
+                    $query->withPivot('badge');
+                }
+            ])->get();
 
-            'date_demarrage' => $tontine->date_demarrage,
-            'date_fin' => $tontine->date_fin,
-            'description' => $tontine->description,
-            'montant_mensuel' => round($tontine->montant / $tontine->nombre_personne, 2),
-            'statut' => $tontine->statut,
+            if ($tontines->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Aucune tontine trouvée pour cet utilisateur.',
+                    'data' => []
+                ], 200);
+            }
 
-            // Mapper les membres pour inclure leurs informations et badges
-            'membres' => $tontine->users->map(function ($user) {
+            // Transformer les tontines pour inclure les informations nécessaires
+            $data = $tontines->map(function ($tontine) {
                 return [
-                    'id' => $user->id,
-                    'nom' => $user->nom,
-                    'prenom' => $user->prenom,
-                    'phone' => $user->phone,
-                    'badge' => $user->pivot->badge,
+                    'id' => $tontine->id,
+                    'nom' => $tontine->nom,
+                    'code_adhesion' => $tontine->code_adhesion,
+                    'nombre_personne' => $tontine->nombre_personne,
+                    'nombre_membres_actuels' => $tontine->users->count(),
+                    'nombre_restant' => max(0, $tontine->nombre_personne - $tontine->users->count()),
+                    'duree' => $tontine->duree,
+                    'montant' => $tontine->montant,
+                    'type' => $tontine->type,
+                    'tirage' => $tontine->tirage,
+                    'date_demarrage' => $tontine->date_demarrage,
+                    'date_fin' => $tontine->date_fin,
+                    'description' => $tontine->description,
+                    'montant_mensuel' => $tontine->nombre_personne > 0
+                        ? round($tontine->montant / $tontine->nombre_personne, 2)
+                        : 0,
+                    'statut' => $tontine->statut,
+                    'membres' => $tontine->users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'nom' => $user->nom,
+                            'prenom' => $user->prenom,
+                            'phone' => $user->phone,
+                            'badge' => $user->pivot->badge ?? null, // éviter erreur si badge null
+                        ];
+                    }),
                 ];
-            }),
-        ];
-    });
+            });
+
+            // Retourner la liste des tontines
+            return response()->json([
+                'status' => true,
+                'message' => 'Tontines récupérées avec succès.',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Erreur lors de la récupération des tontines.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
 
-    // Retourner la liste des tontines avec leurs informations
-    return response()->json($data);
-}
 
-
-
-   public function store(Request $request)
+    public function store(Request $request)
 {
     $request->validate([
         'nom' => 'required',

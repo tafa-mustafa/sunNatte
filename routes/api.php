@@ -26,11 +26,11 @@ Route::get('admin/test', [AdminController::class, 'test']);
 /* Route::get('tontine/contribution/success', [ContributionController::class, 'success'])->name('payment.success');
 Route::get('tontine/contribution/error', [ContributionController::class, 'error'])->name('payment.error');
  */
-    Route::get('/tarifs', [TarifController::class, 'index']);
-    Route::post('/tarifs', [TarifController::class, 'store']);
-    Route::get('/tarifs/{tarif}', [TarifController::class, 'show']);
-    Route::put('/tarifs/{tarif}', [TarifController::class, 'update']);
-    Route::delete('/tarifs/{tarif}', [TarifController::class, 'destroy']);
+    Route::get('admin/tarifs', [TarifController::class, 'index']);
+    Route::post('admin/tarifs', [TarifController::class, 'store']);
+    Route::get('admin/tarifs/{tarif}', [TarifController::class, 'show']);
+    Route::put('admin/tarifs/{tarif}', [TarifController::class, 'update']);
+    Route::delete('admin/tarifs/{tarif}', [TarifController::class, 'destroy']);
 
 
 Route::post('/users/login', [LoginController::class, 'login']);
@@ -47,6 +47,7 @@ Route::post('/users/update/password', [UserController::class, 'update_pass']);
 Route::post('/users/update/profile/{user}', [UserController::class, 'update']);
 Route::get('/users/profile', [UserController::class, 'moi']);
 Route::get('/users/{user}', [UserController::class, 'show']);
+Route::post('/users/add', [UserController::class, 'store']);
 
 /********************************TONTINE *********************/
 
@@ -112,6 +113,14 @@ Route::post('admin/users/update/{user}', [AdminController::class,'update_user'])
 Route::delete('admin/users/delete/{user}', [AdminController::class,'delete_user']);
 Route::post('admin/tontine/adhesion/{tontine}', [UserController::class,'demande']);
 Route::post('admin/tontine/adhere_user/{tontine}', [AdminController::class,'adherer_user']);
+
+    Route::post('admin/users', [AdminController::class, 'store']);                 // Créer un utilisateur
+    Route::get('admin/users', [AdminController::class, 'list_users']);             // Lister les utilisateurs
+    Route::get('admin/users/{user}', [AdminController::class, 'show_user']);       // Voir un utilisateur
+    Route::put('admin/users/{user}', [AdminController::class, 'update_user']);     // Modifier un utilisateur
+    Route::delete('admin/users/{user}', [AdminController::class, 'delete_user']);  // Supprimer un utilisateur
+    Route::patch('admin/users/{id}/activate', [AdminController::class, 'active_user']);    // Activer un utilisateur
+    Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']); // Désactiver un utilisateur
 
 
 /**********************NOTIFICATION */
