@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Tontine;
-use App\Notifications\DemandeValidatedNotification;
+use Illuminate\Support\Str;
+use App\Http\Helpers\Helper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use App\Rules\MatchOldPassword;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
-use App\Rules\MatchOldPassword;
+use App\Notifications\DemandeValidatedNotification;
 
 class AdminController extends Controller
 {
@@ -248,6 +249,31 @@ class AdminController extends Controller
         $msg = $status ? 'activée' : 'désactivée';
         return response()->json(['message' => "Tontine $msg avec succès"]);
     }
+
+
+
+    public function login_user(Request $request)
+    {
+
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            Helper::sendError('email ou password invalide');
+
+        }
+
+        $user = Auth::user();
+
+
+
+
+        $success['token'] = $user->createToken('sunuNatte_app')->plainTextToken;
+        $success['id'] = $user->id;
+        $success['nom'] = $user->nom;
+        $success['email'] = $user->email;
+        return response()->json($success);
+
+
+    }
+
 }
 
     
