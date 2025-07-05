@@ -169,7 +169,7 @@ class AdminController extends Controller
         try {
             $tontines = Tontine::whereHas('users', function ($query) {
                 $query->where('adhesions.badge', 'systems');
-            })->where('statut', 1)->get();
+            })->get();
 
             return response()->json($tontines);
         } catch (\Exception $e) {
@@ -207,6 +207,9 @@ class AdminController extends Controller
             }
 
             $tontine = Tontine::create($validated);
+            $createur = Auth::user();
+            $tontine->users()->attach($createur->id);
+            $createur->adhesions()->update(['badge' => 'stystems']);
 
             DB::commit();
 

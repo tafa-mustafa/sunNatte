@@ -26,12 +26,7 @@ Route::get('admin/test', [AdminController::class, 'test']);
 /* Route::get('tontine/contribution/success', [ContributionController::class, 'success'])->name('payment.success');
 Route::get('tontine/contribution/error', [ContributionController::class, 'error'])->name('payment.error');
  */
-    Route::get('admin/tarifs', [TarifController::class, 'index']);
-    Route::post('admin/tarifs', [TarifController::class, 'store']);
-    Route::get('admin/tarifs/{tarif}', [TarifController::class, 'show']);
-    Route::put('admin/tarifs/{tarif}', [TarifController::class, 'update']);
-    Route::delete('admin/tarifs/{tarif}', [TarifController::class, 'destroy']);
-
+    
 
 Route::post('/users/login', [LoginController::class, 'login']);
 Route::post('/users/register', [RegisterController::class, 'register']);
@@ -48,6 +43,14 @@ Route::post('/users/update/profile/{user}', [UserController::class, 'update']);
 Route::get('/users/profile', [UserController::class, 'moi']);
 Route::get('/users/{user}', [UserController::class, 'show']);
 Route::post('/users/add', [UserController::class, 'store']);
+
+
+
+Route::get('admin/tarifs', [TarifController::class, 'index']);
+    Route::post('admin/tarifs', [TarifController::class, 'store']);
+    Route::get('admin/tarifs/{tarif}', [TarifController::class, 'show']);
+    Route::put('admin/tarifs/{tarif}', [TarifController::class, 'update']);
+    Route::delete('admin/tarifs/{tarif}', [TarifController::class, 'destroy']);
 
 /********************************TONTINE *********************/
 
