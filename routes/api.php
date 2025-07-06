@@ -23,9 +23,7 @@ Route::post('admin/login', [AdminController::class, 'login_user']);
 Route::get('admin/test', [AdminController::class, 'test']);
     Route::get('payment/success', [ContributionController::class, 'success'])->name('payment.success');
     Route::get('payment/error', [ContributionController::class, 'error'])->name('payment.error');
-/* Route::get('tontine/contribution/success', [ContributionController::class, 'success'])->name('payment.success');
-Route::get('tontine/contribution/error', [ContributionController::class, 'error'])->name('payment.error');
- */
+
     
 
 Route::post('/users/login', [LoginController::class, 'login']);
@@ -58,7 +56,7 @@ Route::post('tontine/create', [TontineController::class, 'store']);
 Route::post('tontine/adhesion', [TontineController::class, 'adhesion_tontine']);
 Route::get('tontine/{tontine}/detail', [TontineController::class, 'show']);
 Route::get('tontine/{tontine}/tirage', [TontineController::class, 'tirage']);
-Route::get('tontine/{tontine}/listeVersements', [TontineController::class, 'listeVersements']);
+Route::get('tontine/listeVersements', [TontineController::class, 'listeVersements']);
 Route::get('tontine/list', [TontineController::class, 'index']);
 Route::get('tontine/avenir', [TontineController::class, 'list_avenir']);
 

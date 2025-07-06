@@ -12,93 +12,72 @@ use Illuminate\Support\Facades\Log;
 
 class ContributionController extends Controller
 {
-   public function contribute(Request $request, Tontine $tontine)
-{
-    $user = auth()->user();
-    $montant = round($tontine->montant / $tontine->nombre_personne, 2);
-
-    // Créer la session de paiement via l'API Wave
-    $response = Http::withHeaders([
-        "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-        "Content-Type" => "application/json"
-    ])->post("https://api.wave.com/v1/checkout/sessions", [
-        "amount" => round($montant * 0.96, 2),
-        "currency" => "XOF",
-        "error_url" => route('payment.error', [], true), // Forcer HTTPS
-        "success_url" => route('payment.success', [], true), // Forcer HTTPS
-    ]);
-
-    // Vérifier si la requête a échoué
-    if ($response->failed()) {
-        return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
-    }
-
-    $checkout_session = $response->json();
-
-    // Vérifier si 'wave_launch_url' est présent dans la réponse
-    if (!isset($checkout_session['wave_launch_url'])) {
-        return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
-    }
-
-    // Utiliser une transaction pour sécuriser l'enregistrement des données
-    DB::beginTransaction();
-
-    try {
-        // Créer la contribution
-        $contribution = Contribution::create(attributes: [
-            'user_id' => $user->id,
-            'tontine_id' => $tontine->id,
-            'montant' => $montant,
+    public function contribute(Request $request, Tontine $tontine)
+    {
+        $user = auth()->user();
+        $montant = round($tontine->montant / $tontine->nombre_personne, 2);
+    
+        // Calculer la commission (4% ici)
+        $commission = round($montant * 0.04, 2);
+        $montant_net = round($montant - $commission, 2);
+    
+        // Créer la session de paiement via l'API Wave
+        $response = Http::withHeaders([
+            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
+            "Content-Type" => "application/json"
+        ])->post("https://api.wave.com/v1/checkout/sessions", [
+            "amount" => $montant_net,
+            "currency" => "XOF",
+            "error_url" => route('payment.error', [], true), // Forcer HTTPS
+            "success_url" => route('payment.success', [], true), // Forcer HTTPS
         ]);
-
-        DB::commit();
-
-        // Renvoyer les données pertinentes à l'utilisateur
-        return response()->json([
-            'message' => 'Session de paiement créée avec succès.',
-            'wave_launch_url' => $checkout_session['wave_launch_url'],
-            'session_id' => $checkout_session['id'],
-            'amount' => $checkout_session['amount'],
-            'currency' => $checkout_session['currency'],
-            'checkout_status' => $checkout_session['checkout_status'],
-            'payment_status' => $checkout_session['payment_status'],
-            'when_created' => $checkout_session['when_created'],
-            'when_expires' => $checkout_session['when_expires'],
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => 'Erreur lors de l\'enregistrement de la contribution.'], 500);
+    
+        // Vérifier si la requête a échoué
+        if ($response->failed()) {
+            return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
+        }
+    
+        $checkout_session = $response->json();
+    
+        // Vérifier si 'wave_launch_url' est présent dans la réponse
+        if (!isset($checkout_session['wave_launch_url'])) {
+            return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
+        }
+    
+        try {
+            // Enregistrer la transaction en statut "pending"
+            DB::beginTransaction();
+    
+            $transaction = Transaction::create([
+                'user_id' => $user->id,
+                'tontine_id' => $tontine->id,
+                'session_id' => $checkout_session['id'],
+                'montant' => $montant,
+                'commission' => $commission,
+                'statut' => 'pending',
+            ]);
+    
+            DB::commit();
+    
+            return response()->json([
+                'message' => 'Session de paiement créée avec succès.',
+                'wave_launch_url' => $checkout_session['wave_launch_url'],
+                'session_id' => $checkout_session['id'],
+                'amount' => $montant_net,
+                'original_amount' => $montant,
+                'commission' => $commission,
+                'currency' => $checkout_session['currency'],
+                'checkout_status' => $checkout_session['checkout_status'],
+                'payment_status' => $checkout_session['payment_status'],
+                'when_created' => $checkout_session['when_created'],
+                'when_expires' => $checkout_session['when_expires'],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erreur lors de l\'enregistrement de la transaction.'], 500);
+        }
     }
-}
-
-  public function getContributionsByTontine(Tontine $tontine)
-{
-    $user = auth()->user();
-
-    // Récupérer les contributions de l'utilisateur liées à cette tontine
-    $contributions = $user->contributions()
-        ->where('tontine_id', $tontine->id) // Filtrer par la tontine spécifique
-        ->with('tontine:id,nom') // Charger uniquement les champs nécessaires de la tontine
-        ->get(['id', 'montant', 'date_contribution', 'tontine_id']); // Sélectionner les champs nécessaires
-
-    if ($contributions->isEmpty()) {
-        return response()->json(['message' => 'Aucune contribution trouvée pour cette tontine.'], 404);
-    }
-
-    // Transformer les données pour inclure les noms des tontines
-    $contributions = $contributions->map(function ($contribution) {
-        return [
-            'id' => $contribution->id,
-            'montant' => $contribution->montant,
-            'date_contribution' => $contribution->date_contribution instanceof \Carbon\Carbon 
-                ? $contribution->date_contribution->format('Y-m-d') 
-                : $contribution->date_contribution,
-            'tontine_name' => $contribution->tontine->nom,
-        ];
-    });
-
-    return response()->json(['contributions' => $contributions], 200);
-}
+    
 
 
     public function success(Request $request)
@@ -256,7 +235,7 @@ public function confirmPayment(Request $request, Tontine $tontine)
 {
     // Valider les données entrantes
     $validated = $request->validate([
-        'session_id' => 'required|string', // session_id est obligatoire
+        'session_id' => 'required|string',
     ]);
 
     $session_id = $validated['session_id'];
@@ -285,6 +264,13 @@ public function confirmPayment(Request $request, Tontine $tontine)
 
         DB::beginTransaction();
         try {
+            // Vérifier si la transaction existe déjà (pour éviter doublon)
+            $transactionExiste = Contribution::where('transaction_id', $session_id)->exists();
+
+            if ($transactionExiste) {
+                return response()->json(['message' => 'Cette transaction a déjà été confirmée.'], 200);
+            }
+
             // Vérifier si l'utilisateur a déjà contribué ce mois-ci pour cette tontine
             $contributionExistante = $tontine->contributions()
                 ->where('user_id', $user->id)
@@ -301,16 +287,27 @@ public function confirmPayment(Request $request, Tontine $tontine)
                 'user_id' => $user->id,
                 'montant' => $amount,
                 'date_contribution' => $dateActuelle,
-                'transaction_id' => $session_id,
+                'transaction_id' => $session_id, // Associer le session_id
             ]);
 
+            // Mettre à jour le montant de la tontine
+            $tontine->montant += $amount;
+            $tontine->save();
+
             DB::commit();
-            return response()->json(['message' => 'Contribution enregistrée avec succès.'], 200);
+
+            return response()->json([
+                'message' => 'Contribution enregistrée et montant ajouté à la tontine.',
+                'tontine' => $tontine
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            // Ajouter un log pour le débogage
             Log::error('Erreur lors de l\'enregistrement de la contribution : ' . $e->getMessage());
-            return response()->json(['error' => 'Erreur lors de l\'enregistrement de la contribution.'.$e], 500);
+
+            return response()->json([
+                'error' => 'Erreur lors de l\'enregistrement de la contribution.',
+                'details' => $e->getMessage()
+            ], 500);
         }
     } elseif (in_array($status, ['failed', 'processing', 'pending'])) {
         return response()->json(['error' => 'Le paiement est ' . $status . '. Veuillez réessayer ou patienter.'], 400);
@@ -318,6 +315,7 @@ public function confirmPayment(Request $request, Tontine $tontine)
         return response()->json(['error' => "Statut de paiement inconnu: {$status}"], 400);
     }
 }
+
 
 
 

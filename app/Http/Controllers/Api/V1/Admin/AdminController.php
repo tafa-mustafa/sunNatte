@@ -264,26 +264,39 @@ class AdminController extends Controller
 
 
     public function login_user(Request $request)
-    {
+{
+    // Valider les champs requis
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string|min:6',
+    ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            Helper::sendError('email ou password invalide');
-
-        }
-
-        $user = Auth::user();
-
-
-
-
-        $success['token'] = $user->createToken('sunuNatte_app')->plainTextToken;
-        $success['id'] = $user->id;
-        $success['nom'] = $user->nom;
-        $success['email'] = $user->email;
-        return response()->json($success);
-
-
+    // Vérifier l'authentification
+    if (!Auth::attempt($request->only('email', 'password'))) {
+        return response()->json([
+            'error' => 'Email ou mot de passe invalide.'
+        ], 401);
     }
+
+    $user = Auth::user();
+
+    // Vérifier si le user a le role_id = 1
+    if ($user->role_id !== 1) {
+        Auth::logout(); // Déconnecter immédiatement
+        return response()->json([
+            'error' => 'Vous n\'êtes pas autorisé à vous connecter à cette application.'
+        ], 403);
+    }
+
+    // Créer le token
+    $success['token'] = $user->createToken('sunuNatte_app')->plainTextToken;
+    $success['id'] = $user->id;
+    $success['nom'] = $user->nom;
+    $success['email'] = $user->email;
+
+    return response()->json($success);
+}
+
 
 }
 

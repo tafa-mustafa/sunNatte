@@ -338,14 +338,42 @@ public function tirage(Tontine $tontine)
 
 
 
-public function listeVersements(Tontine $tontine)
+public function listeVersements()
 {
-    $tirages = $tontine->tirages()
-        ->with('user:id,nom,prenom')
-        ->orderBy('date_versement')
-        ->get();
+    try {
+        // Obtenir la date actuelle (mois/année)
+        $moisActuel = now()->format('Y-m');
+        
+        // Chercher tous les tirages dont la date_versement est dans le mois actuel
+        $tirages = \App\Models\Tirage::with(['tontine', 'user'])
+            ->where('date_versement', 'like', $moisActuel . '%')
+            ->get();
 
-    return response()->json($tirages);
+        // Grouper par tontine
+        $data = $tirages->groupBy('tontine.nom')->map(function ($tiragesParTontine) {
+            return $tiragesParTontine->map(function ($tirage) {
+                return [
+                    'user_id' => $tirage->user->id,
+                    'nom' => $tirage->user->nom,
+                    'prenom' => $tirage->user->prenom,
+                    'phone' => $tirage->user->phone,
+                    'date_versement' => $tirage->date_versement,
+                ];
+            });
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Liste des versements pour ce mois.',
+            'data' => $data
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Erreur lors de la récupération.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
 
