@@ -169,7 +169,7 @@ class AdminController extends Controller
         try {
             // Récupère toutes les tontines avec leurs membres et pagine par 10
             $tontines = Tontine::with(['users' => function ($query) {
-                $query->select('users.id', 'users.name', 'users.email'); // Charger juste les infos utiles
+                $query->select('users.id', 'users.nom', 'users.prenom', 'users.email'); // Charger juste les infos utiles
             }])->paginate(10); // Pagination par 10
     
             return response()->json([
