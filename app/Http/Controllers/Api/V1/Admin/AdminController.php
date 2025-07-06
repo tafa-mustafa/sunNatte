@@ -165,17 +165,25 @@ class AdminController extends Controller
     public function list_tontine()
     {
         $this->checkIsAdmin();
-
+    
         try {
-            $tontines = Tontine::whereHas('users', function ($query) {
-                $query->where('adhesions.badge', 'systems');
-            })->get();
-
-            return response()->json($tontines);
+            // Récupère toutes les tontines avec leurs membres et pagine par 10
+            $tontines = Tontine::with(['users' => function ($query) {
+                $query->select('users.id', 'users.name', 'users.email'); // Charger juste les infos utiles
+            }])->paginate(10); // Pagination par 10
+    
+            return response()->json([
+                'message' => 'Liste des tontines récupérée avec succès.',
+                'data' => $tontines
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur lors de la récupération des tontines', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Erreur lors de la récupération des tontines.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+    
 
     /**
      * ➕ Créer une tontine
@@ -190,7 +198,7 @@ class AdminController extends Controller
             'type' => 'nullable|string',
             'duree' => 'nullable|integer',
             'montant' => 'nullable|numeric',
-            'tirage' => 'nullable|integer',
+            'tirage' => 'nullable|string',
             'materiel_id' => 'nullable|exists:materiels,id',
             'date_demarrage' => 'nullable|date',
             'description' => 'nullable|string',

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 class TirelireController extends Controller
 {
-      public function createTirelire(Request $request)
+    public function createTirelire(Request $request)
     {
         $request->validate([
             'titre' => 'required|string|max:255',
@@ -20,42 +20,43 @@ class TirelireController extends Controller
             'objectif' => 'nullable|string|max:255',
             'date_fin' => 'required|date|after:today',
         ]);
-
+    
         $user = auth()->user();
-
+    
         // Créer une session de paiement via Wave
         $response = Http::withHeaders([
             "Authorization" => "Bearer " . env('WAVE_API_KEY'),
             "Content-Type" => "application/json"
         ])->post("https://api.wave.com/v1/checkout/sessions", [
-                    "amount" => $request->montant,
-                    "currency" => "XOF",
-                    "error_url" => route('payment.error'),
-                    "success_url" => route('payment.success'),
-                ]);
-
+            "amount" => $request->montant,
+            "currency" => "XOF",
+            "error_url" => route('payment.error'),
+            "success_url" => route('payment.success', [], true), // URL absolue
+        ]);
+    
         if ($response->failed()) {
             return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
         }
-
+    
         $checkout_session = $response->json();
         $session_id = $checkout_session['id'] ?? null;
-
-        if (!$session_id) {
+        $payment_url = $checkout_session['wave_launch_url'] ?? null;
+    
+        if (!$session_id || !$payment_url) {
             return response()->json(['error' => 'Session de paiement invalide.'], 500);
         }
-
+    
         // Créer une tirelire en statut "pending"
         $tirelire = Tirelire::create([
             'titre' => $request->titre,
             'montant' => 0, // Initialement 0, le montant sera ajouté après paiement
             'objectif' => $request->objectif,
-             'montant_objectif' => $request->montant_objectif,
+            'montant_objectif' => $request->montant_objectif,
             'date_debut' => now(),
             'date_fin' => $request->date_fin,
             'user_id' => $user->id,
         ]);
-
+    
         // Sauvegarder la transaction
         Transaction::create([
             'tirelire_id' => $tirelire->id,
@@ -63,78 +64,70 @@ class TirelireController extends Controller
             'montant' => $request->montant,
             'statut' => 'pending',
         ]);
-
+    
         return response()->json([
             'message' => 'Session de paiement créée avec succès.',
-            'payment_url' => $checkout_session['wave_launch_url'],
+            'payment_url' => $payment_url,
             'tirelire' => $tirelire,
         ]);
     }
-  public function addMoneyToTirelire(Request $request, Tirelire $tirelire)
-{
-    $request->validate([
-        'montant' => 'required|numeric|min:1',
-    ]);
-
-    $user = auth()->user();
-
-    if ($tirelire->user_id !== $user->id) {
-        return response()->json(['error' => 'Vous n\'êtes pas autorisé à modifier cette tirelire.'], 403);
+    
+    public function addMoneyToTirelire(Request $request, Tirelire $tirelire)
+    {
+        $request->validate([
+            'montant' => 'required|numeric|min:1',
+        ]);
+    
+        $user = auth()->user();
+    
+        if ($tirelire->user_id !== $user->id) {
+            return response()->json(['error' => 'Vous n\'êtes pas autorisé à modifier cette tirelire.'], 403);
+        }
+    
+        $montant = $request->montant;
+        $commission = $montant * 0.02;
+        $montantNet = $montant + $commission;
+    
+        // Créer la session Wave
+        $response = Http::withHeaders([
+            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
+            "Content-Type" => "application/json"
+        ])->post("https://api.wave.com/v1/checkout/sessions", [
+            "amount" => $montantNet,
+            "currency" => "XOF",
+            "error_url" => route('payment.error', [], true),
+            "success_url" => route('payment.success', [], true),
+        ]);
+    
+        if ($response->failed()) {
+            return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
+        }
+    
+        $checkout_session = $response->json();
+        $session_id = $checkout_session['id'] ?? null;
+        $payment_url = $checkout_session['wave_launch_url'] ?? null;
+    
+        if (!$session_id || !$payment_url) {
+            return response()->json(['error' => 'Session de paiement invalide.'], 500);
+        }
+    
+        // Enregistrer la transaction
+        $transaction = Transaction::create([
+            'tirelire_id' => $tirelire->id,
+            'session_id' => $session_id,
+            'montant' => $montant,
+            'statut' => 'pending',
+        ]);
+    
+        return response()->json([
+            'message' => 'Session de paiement créée.',
+            'payment_url' => $payment_url,
+            'commission' => $commission,
+            'net' => $montantNet,
+            'transaction' => $transaction
+        ]);
     }
-
-    $montant = $request->montant;
-    $commission = $montant * 0.02;
-
-    /* 🧮 Appliquer la grille de commission
-    if ($montant <= 50000) {
-        $commission = $montant * 0.05; // 5%
-    } elseif ($montant <= 100000) {
-        $commission = $montant * 0.045; // 4.5%
-    } else {
-        $commission = $montant * 0.04; // 4%
-    }
-    */
-    // 💵 Montant après commission (optionnel à afficher)
-    $montantNet = $montant + $commission;
-
-    // 🌀 Créer la session Wave
-    $response = Http::withHeaders([
-        "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-        "Content-Type" => "application/json"
-    ])->post("https://api.wave.com/v1/checkout/sessions", [
-        "amount" => $montantNet,
-        "currency" => "XOF",
-        "error_url" => route('payment.error', [], true),
-        "success_url" => route('payment.success', [], true),
-    ]);
-
-    if ($response->failed()) {
-        return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
-    }
-
-    $checkout_session = $response->json();
-    $session_id = $checkout_session['id'] ?? null;
-
-    if (!$session_id) {
-        return response()->json(['error' => 'Session de paiement invalide.'], 500);
-    }
-
-    // 💾 Enregistrer la transaction
-    $transaction = Transaction::create([
-        'tirelire_id' => $tirelire->id,
-        'session_id' => $session_id,
-        'montant' => $montant,
-        'statut' => 'pending',
-    ]);
-
-    return response()->json([
-        'message' => 'Session de paiement créée',
-        'checkout_url' => $checkout_session['payment_url'] ?? null,
-        'commission' => $commission,
-        'net' => $montantNet,
-        'transaction' => $transaction
-    ]);
-}
+    
 
 
     public function paymentSuccess(Request $request ,Tirelire $tirelire)
