@@ -103,7 +103,7 @@ Route::post('admin/tontines/create', [AdminController::class,'store_tontine']);
 Route::get('admin/tontines/all', [AdminController::class,'list_tontine']);
 Route::get('admin/tontines/show/{tontine}', [AdminController::class,'show_tontine']);
 Route::get('admin/tontines/open/{tontine}', [AdminController::class,'active_tontine']);
-Route::post('admin/tontines/update/{tontine}', [AdminController::class,'update_tontine']);
+Route::post('admin/tontines/update/{id}', [AdminController::class,'update_tontine']);
 Route::get('admin/tontines/close/{tontine}', [AdminController::class,'desactive_tontine']);
 Route::get('admin/users/all', [AdminController::class,'list_users']);
 Route::get('admin/users/show/{user}', [AdminController::class,'show_user']);

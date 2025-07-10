@@ -245,7 +245,7 @@ class AdminController extends Controller
     /**
      * ✏️ Modifier une tontine
      */
-    public function update_tontine(Request $request, Tontine $tontine)
+    public function update_tontine(Request $request, $id)
     {
         $this->checkIsAdmin();
 
