@@ -189,44 +189,58 @@ class AdminController extends Controller
      * ➕ Créer une tontine
      */
     public function store_tontine(Request $request)
-    {
-        $this->checkIsAdmin();
+{
+    $this->checkIsAdmin();
 
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'nombre_personne' => 'required|integer',
-            'type' => 'nullable|string',
-            'duree' => 'nullable|integer',
-            'montant' => 'nullable|numeric',
-            'tirage' => 'nullable|string',
-            'materiel_id' => 'nullable|exists:materiels,id',
-            'date_demarrage' => 'nullable|date',
-            'description' => 'nullable|string',
-        ]);
+    $validated = $request->validate([
+        'nom' => 'required|string|max:255',
+        'nombre_personne' => 'required|integer',
+        'type' => 'nullable|string',
+        'duree' => 'nullable|integer',
+        'montant' => 'nullable|numeric',
+        'tirage' => 'nullable|string',
+        'materiel_id' => 'nullable|exists:materiels,id',
+        'date_demarrage' => 'nullable|date',
+        'description' => 'nullable|string',
+    ]);
 
-        try {
-            DB::beginTransaction();
+    try {
+        DB::beginTransaction();
 
-            $validated['code_adhesion'] = Str::random(10);
+        // Génération d’un code aléatoire pour l’adhésion
+        $validated['code_adhesion'] = Str::random(10);
 
-            if (isset($validated['date_demarrage']) && $validated['duree']) {
-                $dateDemarrage = Carbon::parse($validated['date_demarrage']);
-                $validated['date_fin'] = $dateDemarrage->copy()->addMonths($validated['duree']);
-            }
-
-            $tontine = Tontine::create($validated);
-            $createur = Auth::user();
-            $tontine->users()->attach($createur->id);
-            $createur->adhesions()->update(['badge' => 'stystems']);
-
-            DB::commit();
-
-            return response()->json(['message' => 'Tontine créée avec succès', 'tontine' => $tontine], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Erreur lors de la création', 'error' => $e->getMessage()], 500);
+        // Calcul de la date de fin si date_demarrage et durée sont fournis
+        if (!empty($validated['date_demarrage']) && !empty($validated['duree'])) {
+            $dateDemarrage = \Carbon\Carbon::parse($validated['date_demarrage']);
+            $validated['date_demarrage'] = $dateDemarrage->format('Y-m-d');
+            $validated['date_fin'] = $dateDemarrage->copy()->addMonths($validated['duree']);
         }
+
+        // Création de la tontine
+        $tontine = Tontine::create($validated);
+
+        // Ajout du créateur comme membre
+        $createur = Auth::user();
+        $tontine->users()->attach($createur->id);
+
+        // Mise à jour du badge du créateur
+        $createur->adhesions()->update(['badge' => 'systems']); // Corrigé ici
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Tontine créée avec succès',
+            'tontine' => $tontine
+        ], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Erreur lors de la création',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * ✏️ Modifier une tontine
@@ -235,16 +249,49 @@ class AdminController extends Controller
     {
         $this->checkIsAdmin();
 
-        try {
-            $tontine->update($request->only([
-                'nom', 'nombre_personne', 'type', 'duree',
-                'montant', 'tirage', 'materiel_id', 'description'
-            ]));
+    $validated = $request->validate([
+        'nom' => 'sometimes|required|string|max:255',
+        'nombre_personne' => 'sometimes|required|integer',
+        'type' => 'nullable|string',
+        'duree' => 'nullable|integer',
+        'montant' => 'nullable|numeric',
+        'tirage' => 'nullable|string',
+        'materiel_id' => 'nullable|exists:materiels,id',
+        'date_demarrage' => 'nullable|date',
+        'description' => 'nullable|string',
+    ]);
 
-            return response()->json(['message' => 'Tontine mise à jour avec succès']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur lors de la mise à jour', 'error' => $e->getMessage()], 500);
+    try {
+        DB::beginTransaction();
+
+        $tontine = Tontine::findOrFail($id);
+
+        // Si la date de démarrage et la durée sont fournies, recalculer la date de fin
+        if (!empty($validated['date_demarrage']) && !empty($validated['duree'])) {
+            $dateDemarrage = \Carbon\Carbon::parse($validated['date_demarrage']);
+            $validated['date_demarrage'] = $dateDemarrage->format('Y-m-d');
+            $validated['date_fin'] = $dateDemarrage->copy()->addMonths($validated['duree']);
+        } elseif (!empty($validated['duree']) && $tontine->date_demarrage) {
+            // Si seule la durée est modifiée
+            $dateDemarrage = \Carbon\Carbon::parse($tontine->date_demarrage);
+            $validated['date_fin'] = $dateDemarrage->copy()->addMonths($validated['duree']);
         }
+
+        $tontine->update($validated);
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Tontine mise à jour avec succès',
+            'tontine' => $tontine
+        ], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Erreur lors de la mise à jour',
+            'error' => $e->getMessage()
+        ], 500);
+    }
     }
 
     /**
