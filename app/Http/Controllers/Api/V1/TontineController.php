@@ -423,12 +423,12 @@ public function listeVersements()
     
     
 
-   public function filterByType(Request $request)
+ public function filterByType(Request $request)
 {
     // Validation des entrées
     $request->validate([
-        'type' => 'nullable|string', // Le type est optionnel
-        'nom'  => 'nullable|string',  // Le nom est optionnel
+        'type' => 'nullable|string',
+        'nom'  => 'nullable|string',
     ]);
 
     $type = $request->input('type');
@@ -438,44 +438,51 @@ public function listeVersements()
     $query = Tontine::query();
 
     if ($type) {
-        $query->where('type', $type);
+        $query->whereRaw('LOWER(type) = ?', [strtolower($type)]);
     }
+
     if ($nom) {
         $query->where('nom', 'like', '%' . $nom . '%');
     }
 
-    // Charger les tontines filtrées avec leurs membres (et le champ pivot "badge")
-    $tontines = $query->with(['users' => function($q) {
-        $q->withPivot('badge');
-    }])->get();
+    // 👉 Filtrer uniquement les tontines créées par des utilisateurs ayant le rôle "admin"
+    $query->whereHas('users', function ($q) {
+        $q->whereHas('roles', function ($roleQuery) {
+            $roleQuery->where('name', 'admin');
+        });
+    });
 
-    // Si aucune tontine n'est trouvée, retourner un message approprié
+    // Charger les tontines avec leurs membres
+    $tontines = $query->with(['users.roles', 'materiel'])->get();
+
+    // Si aucune tontine n’est trouvée
     if ($tontines->isEmpty()) {
-        return response()->json(['message' => 'Aucune tontine trouvée pour les critères donnés.'], 404);
+        return response()->json([
+            'message' => 'Aucune tontine trouvée pour un administrateur.'
+        ], 404);
     }
 
-    // Transformer chaque tontine pour inclure les informations désirées
+    // Transformer chaque tontine
     $data = $tontines->map(function ($tontine) {
-        // Récupérer les membres déjà chargés
         $members = $tontine->users;
         return [
             'id'                      => $tontine->id,
             'nom'                     => $tontine->nom,
             'code_adhesion'           => $tontine->code_adhesion,
             'nombre_personne'         => $tontine->nombre_personne,
-            'nombre_membres_actuels'  => $tontine->users->count(),
-            'nombre_restant'          => max(0, $tontine->nombre_personne - $tontine->users->count()),
+            'nombre_membres_actuels'  => $members->count(),
+            'nombre_restant'          => max(0, $tontine->nombre_personne - $members->count()),
             'duree'                   => $tontine->duree,
             'tirage'                  => $tontine->tirage,
             'montant'                 => $tontine->montant,
             'type'                    => $tontine->type,
-            'materiel_image'          => $tontine->materiel ? $tontine->materiel->image : null,
-            'materiel_titre'          => $tontine->materiel ? $tontine->materiel->nom : null,
-            'materiel_id'             => $tontine->materiel ? $tontine->materiel->id : null,
+            'materiel_image'          => optional($tontine->materiel)->image,
+            'materiel_titre'          => optional($tontine->materiel)->nom,
+            'materiel_id'             => optional($tontine->materiel)->id,
             'date_demarrage'          => $tontine->date_demarrage,
             'date_fin'                => $tontine->date_fin,
             'description'             => $tontine->description,
-            'montant_mensuel'         => round($tontine->montant / $tontine->nombre_personne, 2),
+            'montant_mensuel'         => round($tontine->montant / max($tontine->nombre_personne, 1), 2),
             'statut'                  => $tontine->statut,
             'membres'                 => $members->map(function ($user) {
                 return [
@@ -483,13 +490,12 @@ public function listeVersements()
                     'nom'     => $user->nom,
                     'prenom'  => $user->prenom,
                     'phone'   => $user->phone,
-                    'badge'   => $user->pivot->badge,
+                    'roles'   => $user->roles->pluck('name'), // On récupère aussi les rôles
                 ];
             }),
         ];
     });
 
-    // Retourner les données filtrées
     return response()->json(['tontines' => $data], 200);
 }
 
