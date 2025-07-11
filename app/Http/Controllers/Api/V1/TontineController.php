@@ -423,7 +423,7 @@ public function listeVersements()
     
     
 
- public function filterByType(Request $request)
+public function filterByType(Request $request)
 {
     // Validation des entrées
     $request->validate([
@@ -447,13 +447,13 @@ public function listeVersements()
 
     // 👉 Filtrer uniquement les tontines créées par des utilisateurs ayant le rôle "admin"
     $query->whereHas('users', function ($q) {
-        $q->whereHas('roles', function ($roleQuery) {
-            $roleQuery->where('name', 'admin');
+        $q->whereHas('role', function ($roleQuery) {
+            $roleQuery->where('nom', 'admin'); // car la relation est `role()` et pas `roles()`
         });
     });
 
-    // Charger les tontines avec leurs membres
-    $tontines = $query->with(['users.roles', 'materiel'])->get();
+    // Charger les tontines avec leurs membres et leur rôle
+    $tontines = $query->with(['users.role', 'materiel'])->get();
 
     // Si aucune tontine n’est trouvée
     if ($tontines->isEmpty()) {
@@ -490,7 +490,7 @@ public function listeVersements()
                     'nom'     => $user->nom,
                     'prenom'  => $user->prenom,
                     'phone'   => $user->phone,
-                    'roles'   => $user->roles->pluck('name'), // On récupère aussi les rôles
+                    'role'    => optional($user->role)->nom, // On récupère le nom du rôle
                 ];
             }),
         ];
@@ -498,6 +498,7 @@ public function listeVersements()
 
     return response()->json(['tontines' => $data], 200);
 }
+
 
 
 
