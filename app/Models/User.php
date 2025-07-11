@@ -47,10 +47,13 @@ class User extends Authenticatable
      CONST ROLE_USER = 2;
 
    
-    public function roles()
-    {
-      return $this->hasMany(Role::class);
-    }
+    
+
+    public function role()
+{
+    return $this->belongsTo(Role::class, 'role_id');
+}
+
 
         public function tontines(): BelongsToMany
     {
