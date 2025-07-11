@@ -74,7 +74,7 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
 /****************Contribution ***********************************/
 
     Route::post('tontines/{tontine}/contribute', [ContributionController::class, 'contribute'])->name('tontine.contribute');
-    Route::get('tontines/{tontine}/mycontributes', [ContributionController::class, 'getContributionsByTontine']);
+    //Route::get('tontines/{tontine}/mycontributes', [ContributionController::class, 'getContributionsByTontine']);
 
         Route::post('/wave/token', [ContributionController::class, 'getToken']);
         
@@ -82,7 +82,7 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
 Route::post('contribution/confirm/{tontine}', [ContributionController::class, 'confirmPayment'])->name('contribution.confirm');
 
 Route::get('contribution/{id}', [ContributionController::class, 'getContributionDetail'])->name('ContributionDetail.get');
-Route::get('/tontines/{tontine}/contributions', [TontineController::class, 'getContributionsByTontine'])
+Route::get('/tontines/{tontine}/mycontributes', [TontineController::class, 'getContributionsByTontine'])
     ->name('tontines.contributions');
 
 
