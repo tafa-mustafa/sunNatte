@@ -82,6 +82,9 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
 Route::post('contribution/confirm/{tontine}', [ContributionController::class, 'confirmPayment'])->name('contribution.confirm');
 
 Route::get('contribution/{id}', [ContributionController::class, 'getContributionDetail'])->name('ContributionDetail.get');
+Route::get('/tontines/{tontine}/contributions', [TontineController::class, 'getContributionsByTontine'])
+    ->name('tontines.contributions');
+
 
 /****************Tirelire  ***********************************/
 

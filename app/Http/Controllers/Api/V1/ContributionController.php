@@ -358,6 +358,56 @@ public function getContributionDetail($id)
     return response()->json( $contributionDetail);
 }
 
+public function getContributionsByTontine(Tontine $tontine)
+{
+    $now = now();
+
+    // Charger uniquement les contributions du mois en cours avec les infos utilisateur
+    $contributions = $tontine->contributions()
+        ->whereYear('date_contribution', $now->year)
+        ->whereMonth('date_contribution', $now->month)
+        ->with('user')
+        ->get();
+
+    if ($contributions->isEmpty()) {
+        return response()->json([
+            'message' => 'Aucune contribution trouvée pour cette tontine ce mois-ci.'
+        ], 404);
+    }
+
+    // Calcul du total des contributions du mois
+    $totalContributions = $contributions->sum('montant');
+
+    // Formatter les données pour l’API
+    $data = $contributions->map(function ($contribution) {
+        return [
+            'id' => $contribution->id,
+            'montant' => $contribution->montant,
+            'date_contribution' => $contribution->date_contribution,
+            'transaction_id' => $contribution->transaction_id,
+            'user' => [
+                'id' => $contribution->user->id,
+                'nom' => $contribution->user->nom,
+                'prenom' => $contribution->user->prenom,
+                'phone' => $contribution->user->phone,
+            ]
+        ];
+    });
+
+    return response()->json([
+        'tontine' => [
+            'id' => $tontine->id,
+            'nom' => $tontine->nom,
+            'mois' => $now->format('F Y'), // ex: "Juillet 2025"
+            'montant_attendu' => $tontine->montant,
+            'total_contributions_mois' => $totalContributions,
+            'nombre_contributions_mois' => $contributions->count(),
+            'contributions' => $data
+        ]
+    ], 200);
+}
+
+
 
 
 
