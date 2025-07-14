@@ -168,6 +168,17 @@ class TontineController extends Controller
     try {
         DB::beginTransaction();
 
+
+ // 🔒 Vérifier la présence des documents CNI avant création
+    $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
+    $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+
+    if (!$cniRecto || !$cniVerso) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
+        ], 403);
+    }            
         // Vérification et formatage des dates
         $dateDemarrage = Carbon::parse($request->date_demarrage);
         $dateFin = $request->date_fin 
@@ -213,6 +224,18 @@ class TontineController extends Controller
     public function adhesion(Request $request, Tontine $tontine)
     {
 
+
+            $user = Auth::user();
+        // 🔒 Vérifier la présence des documents CNI avant adhésion
+    $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
+    $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+
+    if (!$cniRecto || !$cniVerso) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour adhérer à une tontine.',
+        ], 403);
+    }
        // $createur = $tontine->users()->withPivot('badge' = 'systems')->get();
         if ($tontine->users->count() >= $tontine->nombre_personne) {
             return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
@@ -406,6 +429,17 @@ public function listeVersements()
         }
 
         $user = auth()->user();
+
+            // 🔒 Vérifier la présence des documents CNI avant création
+        $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
+        $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+
+        if (!$cniRecto || !$cniVerso) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
+            ], 403);
+        }
         if (!$tontine->users->contains($user)) {
             $tontine->users()->attach($user);
             $user->adhesions()->update(['badge' => 'membre']);
@@ -577,37 +611,41 @@ public function completeTirage(Request $request, Tontine $tontine, Tirage $tirag
 
 public function addParticipant(Request $request, Tontine $tontine)
 {
-    // Valider l'entrée (l'identifiant de l'utilisateur à ajouter)
     $request->validate([
         'user_id' => 'required|exists:users,id',
     ]);
 
-   
-    
-     $createur = $tontine->users()
-        ->wherePivot('badge', 'proprio')
-        ->first();
+    $createur = $tontine->users()->wherePivot('badge', 'proprio')->first();
 
     if (!$createur || $createur->id !== auth()->id()) {
-        return response()->json(['message' => 'Seul le créateur de la tontine peut ajouter un participant.'], 403);
-    }
-    
-     if ($tontine->users->count() >= $tontine->nombre_personne) {
-            return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
-        }
-
-    $newParticipantId = $request->input('user_id');
-
-    // Vérifier si l'utilisateur est déjà membre de la tontine
-    if ($tontine->users()->where('user_id', $newParticipantId)->exists()) {
-        return response()->json(['message' => 'Cet utilisateur est déjà participant à la tontine.'], 422);
+        return response()->json(['message' => 'Seul le créateur peut ajouter un participant.'], 403);
     }
 
-    // Ajouter le participant avec un badge par défaut (par exemple, "membre")
-    $tontine->users()->attach($newParticipantId, ['badge' => 'membre']);
+    $participant = User::findOrFail($request->user_id);
 
+    // 🔒 Vérifier la présence des documents CNI du participant
+    $cniRecto = $participant->documents()->where('nom', 'cni_recto')->first();
+    $cniVerso = $participant->documents()->where('nom', 'cni_verso')->first();
+
+    if (!$cniRecto || !$cniVerso) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Ce participant doit uploader sa CNI recto et verso avant d’être ajouté.',
+        ], 403);
+    }
+
+    if ($tontine->users->count() >= $tontine->nombre_personne) {
+        return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
+    }
+
+    if ($tontine->users()->where('user_id', $participant->id)->exists()) {
+        return response()->json(['message' => 'Cet utilisateur est déjà membre de la tontine.'], 422);
+    }
+
+    $tontine->users()->attach($participant->id, ['badge' => 'membre']);
     return response()->json(['message' => 'Participant ajouté avec succès.'], 200);
 }
+
 
 
 }
