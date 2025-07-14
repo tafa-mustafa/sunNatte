@@ -163,27 +163,29 @@ class AdminController extends Controller
      * 📝 Liste des tontines actives
      */
     public function list_tontine()
-    {
-        $this->checkIsAdmin();
-    
-        try {
-            // Récupère toutes les tontines avec leurs membres et pagine par 10
-            $tontines = Tontine::with(['users' => function ($query) {
-                $query->select('users.id', 'users.nom', 'users.prenom', 'users.email'); // Charger juste les infos utiles
-            }])->paginate(10); // Pagination par 10
-    
-            return response()->json([
-                'message' => 'Liste des tontines récupérée avec succès.',
-                'data' => $tontines
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erreur lors de la récupération des tontines.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+{
+    $this->checkIsAdmin();
+
+    try {
+        // Récupère toutes les tontines avec leurs membres
+        // en excluant ceux qui ont role_id = 1 ou 2
+        $tontines = Tontine::with(['users' => function ($query) {
+            $query->select('users.id', 'users.nom', 'users.prenom', 'users.email', 'users.role_id')
+                  ->whereNotIn('users.role_id', [1, 2]); // ⬅️ Exclure les rôles admin
+        }])->paginate(10);
+
+        return response()->json([
+            'message' => 'Liste des tontines récupérée avec succès.',
+            'data' => $tontines
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Erreur lors de la récupération des tontines.',
+            'error' => $e->getMessage()
+        ], 500);
     }
-    
+}
+
 
     /**
      * ➕ Créer une tontine
