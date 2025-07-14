@@ -358,7 +358,7 @@ public function statat()
         $nbUsers = User::count();
 
         // Nombre d'admins
-        $nbAdminUsers = User::whereHas('roles', function ($query) {
+        $nbAdminUsers = User::whereHas('role', function ($query) {
             $query->where('name', 'admin'); // Vérifie par nom du rôle
         })->count();
 
