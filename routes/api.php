@@ -125,6 +125,7 @@ Route::post('admin/tontine/adhere_user/{tontine}', [AdminController::class,'adhe
     Route::delete('admin/users/{user}', [AdminController::class, 'delete_user']);  // Supprimer un utilisateur
     Route::patch('admin/users/{id}/activate', [AdminController::class, 'active_user']);    // Activer un utilisateur
     Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']); // Désactiver un utilisateur
+    Route::get('admin/stats', [AdminController::class, 'statat']);                 // Créer un utilisateur
 
 
 /**********************NOTIFICATION */

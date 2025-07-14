@@ -345,8 +345,60 @@ class AdminController extends Controller
 }
 
 
+
+
+
+
+
+
+public function statat()
+{
+    try {
+        // Nombre total d'utilisateurs
+        $nbUsers = User::count();
+
+        // Nombre d'admins
+        $nbAdminUsers = User::whereHas('roles', function ($query) {
+            $query->where('name', 'admin'); // Vérifie par nom du rôle
+        })->count();
+
+        // Somme des montants pour les tontines actives créées par un admin
+        $montants = Tontine::where('statut', 1)
+            ->whereHas('users', function ($query) {
+                $query->where('role_id', 1); // Filtre les admins
+            })
+            ->sum('montant');
+
+        // Nombre de tontines créées par des admins
+        $tontines_admin = Tontine::whereHas('users', function ($query) {
+            $query->where('role_id', 1);
+        })->count();
+
+        // Nombre de tontines créées par des utilisateurs
+        $tontines_user = Tontine::whereHas('users', function ($query) {
+            $query->where('role_id', 2);
+        })->count();
+
+        return response()->json([
+            'tontines_user' => $tontines_user,
+            'tontines_admin' => $tontines_admin,
+            'cagnotte' => $montants,
+            'nb_users' => $nbUsers,
+            'nb_admin_users' => $nbAdminUsers,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Erreur lors du comptage des utilisateurs.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
-    
+
+  }
+
+
+  
     
 
