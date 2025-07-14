@@ -358,14 +358,12 @@ public function statat()
         $nbUsers = User::count();
 
         // Nombre d'admins
-        $nbAdminUsers = User::whereHas('role', function ($query) {
-            $query->where('name', 'admin'); // Vérifie par nom du rôle
-        })->count();
+        $nbAdminUsers = User::where('role_id', 1)->count();
 
         // Somme des montants pour les tontines actives créées par un admin
         $montants = Tontine::where('statut', 1)
             ->whereHas('users', function ($query) {
-                $query->where('role_id', 1); // Filtre les admins
+                $query->where('role_id', 1);
             })
             ->sum('montant');
 
