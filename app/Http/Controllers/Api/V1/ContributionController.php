@@ -3,62 +3,65 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Tontine;
+use App\Models\Transaction;
 use App\Models\Contribution;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Services\TarifService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 
 class ContributionController extends Controller
 {
     public function contribute(Request $request, Tontine $tontine)
     {
         $user = auth()->user();
-        $montant = round($tontine->montant / $tontine->nombre_personne, 2);
-    
-        // Calculer la commission (4% ici)
-        $commission = round($montant * 0.04, 2);
-        $montant_net = round($montant - $commission, 2);
-    
-        // Créer la session de paiement via l'API Wave
-        $response = Http::withHeaders([
-            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type" => "application/json"
-        ])->post("https://api.wave.com/v1/checkout/sessions", [
-            "amount" => $montant_net,
-            "currency" => "XOF",
-            "error_url" => route('payment.error', [], true), // Forcer HTTPS
-            "success_url" => route('payment.success', [], true), // Forcer HTTPS
-        ]);
-    
-        // Vérifier si la requête a échoué
-        if ($response->failed()) {
-            return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
-        }
-    
-        $checkout_session = $response->json();
-    
-        // Vérifier si 'wave_launch_url' est présent dans la réponse
-        if (!isset($checkout_session['wave_launch_url'])) {
-            return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
-        }
-    
+
+        // Montant à contribuer (par personne)
+        $montant = round($tontine->montant / max($tontine->nombre_personne, 1), 2);
+
         try {
-            // Enregistrer la transaction en statut "pending"
+            // Calculer la commission dynamique pour une cotisation
+            $commission = TarifService::calculerCommission($montant, 'cotisation');
+            $montant_net = round($montant - $commission, 2);
+
+            // Créer la session de paiement via l'API Wave
+            $response = Http::withHeaders([
+                "Authorization" => "Bearer " . env('WAVE_API_KEY'),
+                "Content-Type" => "application/json"
+            ])->post("https://api.wave.com/v1/checkout/sessions", [
+                        "amount" => $montant_net,
+                        "currency" => "XOF",
+                        "error_url" => route('payment.error', [], true),
+                        "success_url" => route('payment.success', [], true),
+                    ]);
+
+            if ($response->failed()) {
+                Log::error('Wave API error (contribute): ' . $response->body());
+                return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
+            }
+
+            $checkout_session = $response->json();
+
+            if (!isset($checkout_session['wave_launch_url'])) {
+                return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
+            }
+
             DB::beginTransaction();
-    
-            $transaction = Transaction::create([
+
+            Transaction::create([
                 'user_id' => $user->id,
                 'tontine_id' => $tontine->id,
                 'session_id' => $checkout_session['id'],
                 'montant' => $montant,
                 'commission' => $commission,
                 'statut' => 'pending',
+                'type' => 'cotisation',
             ]);
-    
+
             DB::commit();
-    
+
             return response()->json([
                 'message' => 'Session de paiement créée avec succès.',
                 'wave_launch_url' => $checkout_session['wave_launch_url'],
@@ -74,10 +77,12 @@ class ContributionController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Erreur lors de l\'enregistrement de la transaction.'], 500);
+            Log::error('Erreur ContributionController (contribute): ' . $e->getMessage());
+            return response()->json(['error' => 'Une erreur est survenue : ' . $e->getMessage()], 500);
         }
     }
-    
+
+
 
 
     public function success(Request $request)
@@ -91,9 +96,9 @@ class ContributionController extends Controller
 
         return response()->json('Erreur de paiement !');
     }
-    
-    
-    
+
+
+
     public function getToken(Request $request)
     {
         // En-têtes nécessaires pour l'API Wave
@@ -193,53 +198,73 @@ class ContributionController extends Controller
 
 
 
-public function initiateContribution(Request $request, Tontine $tontine)
-{
-    $user = auth()->user();
+    public function initiateContribution(Request $request, Tontine $tontine)
+    {
+        $user = auth()->user();
 
-    // Calcul du montant par personne
-    $montant = round($tontine->montant / max($tontine->nombre_personne, 1), 2);
+        // ✅ Calcul du montant par personne
+        $montant = round($tontine->montant / max($tontine->nombre_personne, 1), 2);
 
-    try {
-        $response = Http::withHeaders([
-            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type" => "application/json"
-        ])->post("https://api.wave.com/v1/checkout/sessions", [
-            "amount" => $montant,
-            "currency" => "XOF",
-            "error_url" => route('payment.error', [], true),
-            "success_url" => route('payment.success', [], true),
-        ]);
+        try {
+            // 👉 Calculer la commission dynamique (type: cotisation)
+            $commission = TarifService::calculerCommission($montant, 'cotisation');
 
-        if ($response->failed()) {
-            Log::error('Wave API error (initiateContribution): ' . $response->body());
-            return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
+            // ✅ Déduire la commission pour obtenir le montant net
+            $montant_net = round($montant - $commission, 2);
+
+            // Vérifier que le montant net est valide
+            if ($montant_net <= 0) {
+                return response()->json([
+                    'error' => 'Le montant net après déduction de la commission est invalide.'
+                ], 422);
+            }
+
+            // ✅ Créer la session de paiement via l'API Wave
+            $response = Http::withHeaders([
+                "Authorization" => "Bearer " . env('WAVE_API_KEY'),
+                "Content-Type" => "application/json"
+            ])->post("https://api.wave.com/v1/checkout/sessions", [
+                        "amount" => $montant_net,
+                        "currency" => "XOF",
+                        "error_url" => route('payment.error', [], true),
+                        "success_url" => route('payment.success', [], true),
+                    ]);
+
+            // Vérifier si l'API Wave a échoué
+            if ($response->failed()) {
+                \Log::error('Wave API error (initiateContribution): ' . $response->body());
+                return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
+            }
+
+            $checkout_session = $response->json();
+
+            // Vérifier si l'URL de lancement est présente
+            if (empty($checkout_session['wave_launch_url'])) {
+                return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
+            }
+
+            // ✅ Retourner la réponse avec tous les détails
+            return response()->json([
+                'message' => 'Session de paiement créée avec succès.',
+                'wave_launch_url' => $checkout_session['wave_launch_url'],
+                'session_id' => $checkout_session['id'],
+                'amount' => $montant_net,
+                'original_amount' => $montant,
+                'commission' => $commission,
+                'currency' => $checkout_session['currency'],
+                'tontine_id' => $tontine->id
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erreur API Wave (initiateContribution): ' . $e->getMessage());
+            return response()->json(['error' => 'Une erreur est survenue lors de la communication avec Wave.'], 500);
         }
-
-        $checkout_session = $response->json();
-
-        if (empty($checkout_session['wave_launch_url'])) {
-            return response()->json(['error' => 'Réponse de l\'API Wave invalide.'], 500);
-        }
-
-        return response()->json([
-            'message' => 'Session de paiement créée avec succès.',
-            'wave_launch_url' => $checkout_session['wave_launch_url'],
-            'session_id' => $checkout_session['id'],
-            'amount' => $checkout_session['amount'],
-            'currency' => $checkout_session['currency'],
-            'tontine_id' => $tontine->id
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Erreur API Wave (initiateContribution): ' . $e->getMessage());
-        return response()->json(['error' => 'Une erreur est survenue lors de la communication avec Wave.'], 500);
     }
-}
 
 
 
 
-public function confirmPayment(Request $request, Tontine $tontine)
+
+    public function confirmPayment(Request $request, Tontine $tontine)
 {
     $validated = $request->validate([
         'session_id' => 'required|string',
@@ -343,8 +368,8 @@ public function getContributionDetail($id)
     }
 
     // Assurez-vous que la date est bien une instance Carbon
-    $date_contribution = $contribution->date_contribution instanceof \Carbon\Carbon 
-        ? $contribution->date_contribution->format('Y-m-d') 
+    $date_contribution = $contribution->date_contribution instanceof \Carbon\Carbon
+        ? $contribution->date_contribution->format('Y-m-d')
         : $contribution->date_contribution;
 
     // Construire la réponse

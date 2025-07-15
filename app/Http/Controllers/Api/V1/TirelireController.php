@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Tirelire;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Services\TarifService;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+
 class TirelireController extends Controller
 {
     public function createTirelire(Request $request)
@@ -20,9 +22,9 @@ class TirelireController extends Controller
             'objectif' => 'nullable|string|max:255',
             'date_fin' => 'required|date|after:today',
         ]);
-    
+
         $user = auth()->user();
-    
+
         // Créer une session de paiement via Wave
         $response = Http::withHeaders([
             "Authorization" => "Bearer " . env('WAVE_API_KEY'),
@@ -33,19 +35,19 @@ class TirelireController extends Controller
             "error_url" => route('payment.error'),
             "success_url" => route('payment.success', [], true), // URL absolue
         ]);
-    
+
         if ($response->failed()) {
             return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
         }
-    
+
         $checkout_session = $response->json();
         $session_id = $checkout_session['id'] ?? null;
         $payment_url = $checkout_session['wave_launch_url'] ?? null;
-    
+
         if (!$session_id || !$payment_url) {
             return response()->json(['error' => 'Session de paiement invalide.'], 500);
         }
-    
+
         // Créer une tirelire en statut "pending"
         $tirelire = Tirelire::create([
             'titre' => $request->titre,
@@ -56,7 +58,7 @@ class TirelireController extends Controller
             'date_fin' => $request->date_fin,
             'user_id' => $user->id,
         ]);
-    
+
         // Sauvegarder la transaction
         Transaction::create([
             'tirelire_id' => $tirelire->id,
@@ -64,30 +66,30 @@ class TirelireController extends Controller
             'montant' => $request->montant,
             'statut' => 'pending',
         ]);
-    
+
         return response()->json([
             'message' => 'Session de paiement créée avec succès.',
             'payment_url' => $payment_url,
             'tirelire' => $tirelire,
         ]);
     }
-    
+
     public function addMoneyToTirelire(Request $request, Tirelire $tirelire)
     {
         $request->validate([
             'montant' => 'required|numeric|min:1',
         ]);
-    
+
         $user = auth()->user();
-    
+
         if ($tirelire->user_id !== $user->id) {
             return response()->json(['error' => 'Vous n\'êtes pas autorisé à modifier cette tirelire.'], 403);
         }
-    
+
         $montant = $request->montant;
         $commission = $montant * 0.02;
         $montantNet = $montant + $commission;
-    
+
         // Créer la session Wave
         $response = Http::withHeaders([
             "Authorization" => "Bearer " . env('WAVE_API_KEY'),
@@ -98,19 +100,19 @@ class TirelireController extends Controller
             "error_url" => route('payment.error', [], true),
             "success_url" => route('payment.success', [], true),
         ]);
-    
+
         if ($response->failed()) {
             return response()->json(['error' => 'Erreur lors de la création de la session de paiement.'], 500);
         }
-    
+
         $checkout_session = $response->json();
         $session_id = $checkout_session['id'] ?? null;
         $payment_url = $checkout_session['wave_launch_url'] ?? null;
-    
+
         if (!$session_id || !$payment_url) {
             return response()->json(['error' => 'Session de paiement invalide.'], 500);
         }
-    
+
         // Enregistrer la transaction
         $transaction = Transaction::create([
             'tirelire_id' => $tirelire->id,
@@ -118,7 +120,7 @@ class TirelireController extends Controller
             'montant' => $montant,
             'statut' => 'pending',
         ]);
-    
+
         return response()->json([
             'message' => 'Session de paiement créée.',
             'payment_url' => $payment_url,
@@ -127,7 +129,7 @@ class TirelireController extends Controller
             'transaction' => $transaction
         ]);
     }
-    
+
 
 
     public function paymentSuccess(Request $request ,Tirelire $tirelire)
@@ -176,8 +178,8 @@ class TirelireController extends Controller
             'tirelire' => $tirelire,
         ]);
     }
-    
-    
+
+
     public function myTirelires()
 {
     // Récupérer l'utilisateur connecté
@@ -224,61 +226,106 @@ public function showTirelire($id)
     ], 200);
 }
 
-public function retrait(Tirelire $tirelire)
-{
-    // Vérifier que l'utilisateur est autorisé
-    $user = auth()->user();
-    if ($tirelire->user_id !== $user->id) {
-        return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
-    }
-
-    // Vérifier que la date de fin est dépassée
-    if ($tirelire->date_fin > now()) {
-        return response()->json(['error' => 'La date de fin n\'est pas encore atteinte.'], 400);
-    }
-
-    // Vérifier que la tirelire n'est pas déjà terminée
-    if ($tirelire->statut === 'termine') {
-        return response()->json(['error' => 'Le retrait a déjà été effectué pour cette tirelire.'], 400);
-    }
-
-    // Effectuer le retrait via l'API de Payout de Wave
-    try {
-        $response = Http::withHeaders([
-            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type" => "application/json"
-        ])->post("https://api.wave.com/v1/payout", [
-            "amount" => $tirelire->montant,
-            "currency" => "XOF",
-            "recipient" => [
-                "type" => "mobile",
-                "number" => $user->mobile_number, // Assurez-vous que l'utilisateur a un numéro de mobile enregistré
-            ],
-            "description" => "Retrait de la tirelire ID: {$tirelire->id}",
+    public function retrait(Request $request, Tirelire $tirelire)
+    {
+        $request->validate([
+            'montant' => 'required|numeric|min:1',
+            'wave_phone' => 'nullable|string',
         ]);
 
-        if ($response->failed()) {
-            throw new \Exception('Erreur lors du retrait des fonds.');
+        $user = auth()->user();
+
+        // ✅ Vérifier les autorisations
+        if ($tirelire->user_id !== $user->id) {
+            return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
         }
 
-        $payout = $response->json();
+        if ($tirelire->date_fin && $tirelire->date_fin > now()) {
+            return response()->json(['error' => 'La date de fin n\'est pas encore atteinte.'], 400);
+        }
 
-        // Mettre à jour la tirelire
-        $tirelire->statut = 'termine';
-        $tirelire->save();
+        if ($tirelire->statut === 'termine') {
+            return response()->json(['error' => 'Le retrait a déjà été effectué pour cette tirelire.'], 400);
+        }
 
-        return response()->json([
-            'message' => 'Retrait effectué avec succès.',
-            'payout' => $payout,
-            'tirelire' => $tirelire,
-        ]);
-    } catch (\Exception $e) {
-        Log::error("Erreur lors du retrait pour la tirelire ID: {$tirelire->id} - " . $e->getMessage());
-        return response()->json(['error' => 'Une erreur est survenue lors du retrait.'], 500);
+        if ($tirelire->montant < $request->montant) {
+            return response()->json(['error' => 'Montant insuffisant'], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Calculer la commission dynamique (type: retrait)
+            $commission = TarifService::calculerCommission($request->montant, 'retrait');
+            $netAmount = $request->montant - $commission;
+
+            if ($netAmount <= 0) {
+                return response()->json(['error' => 'Le montant net après commission est invalide.'], 422);
+            }
+
+            $idempotencyKey = \Illuminate\Support\Str::uuid()->toString();
+
+            // ✅ Appel API Wave
+            $waveResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                "Authorization" => "Bearer " . env('WAVE_API_KEY'),
+                "Content-Type" => "application/json",
+                "Idempotency-Key" => $idempotencyKey,
+            ])->post('https://api.wave.com/v1/payout', [
+                        'receive_amount' => (string) $netAmount,
+                        'currency' => 'XOF',
+                        'mobile' => $request->wave_phone ?? $user->phone,
+                        'description' => "Retrait tirelire ID: {$tirelire->id}",
+                    ]);
+
+            if (!$waveResponse->successful()) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'Erreur API Wave',
+                    'details' => $waveResponse->json()
+                ], 500);
+            }
+
+            $waveData = $waveResponse->json();
+            $session_id = $waveData['id'] ?? null;
+
+            if (!$session_id) {
+                DB::rollBack();
+                return response()->json(['error' => 'Session ID introuvable dans la réponse Wave.'], 500);
+            }
+
+            // ✅ Enregistrer la transaction
+            $tirelire->transactions()->create([
+                'montant' => -$request->montant, // Retrait
+                'user_id' => $user->id,
+                'session_id' => $session_id,
+                'commission' => $commission,
+            ]);
+
+            // ✅ Mettre à jour la tirelire
+            $tirelire->montant -= $request->montant;
+            if ($tirelire->montant <= 0) {
+                $tirelire->statut = 'termine';
+            }
+            $tirelire->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Retrait effectué avec succès via Wave.',
+                'retrait_net' => $netAmount,
+                'commission' => $commission,
+                'wave' => $waveData,
+                'tirelire' => $tirelire->fresh()
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("Erreur retrait tirelire ID {$tirelire->id}: " . $e->getMessage());
+            return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
+        }
     }
-}
 
-public function retirait(Request $request, Tirelire $tirelire)
+
+    public function retirait(Request $request, Tirelire $tirelire)
 {
     $request->validate([
         'montant'    => 'required|numeric|min:1',
@@ -311,9 +358,9 @@ public function retirait(Request $request, Tirelire $tirelire)
     try {
         DB::beginTransaction();
 
-        $idempotencyKey = \Illuminate\Support\Str::uuid()->toString();
+        $idempotencyKey = Str::uuid()->toString();
 
-        $waveResponse = \Illuminate\Support\Facades\Http::withHeaders([
+        $waveResponse = Http::withHeaders([
             "Authorization"   => "Bearer " . env('WAVE_API_KEY'),
             "Content-Type"    => "application/json",
             "Idempotency-Key" => $idempotencyKey,
@@ -377,7 +424,7 @@ public function retrait_any(Request $request, Tirelire $tirelire)
         return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
     }
 
-    
+
 
     if ($tirelire->montant < $request->montant) {
         return response()->json(['message' => 'Montant insuffisant'], 422);
