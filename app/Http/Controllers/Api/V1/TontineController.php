@@ -36,7 +36,7 @@ class TontineController extends Controller
                     'nombre_membres_actuels' => $tontine->users->count() - 1,
                     'nombre_restant' => max(0, $tontine->nombre_personne - $tontine->users->count() - 1),
                     'type' => $tontine->type,
-                    'code_adhesion' => $tontine->code_adhesion,              
+                    'code_adhesion' => $tontine->code_adhesion,
                     'duree' => $tontine->duree,
                     'montan' => $tontine->montant,
                     'materiel_image' => $tontine->materiel ? $tontine->materiel->image : null,
@@ -168,6 +168,7 @@ class TontineController extends Controller
     try {
         DB::beginTransaction();
 
+        $user = Auth::user();
 
  // 🔒 Vérifier la présence des documents CNI avant création
     $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
@@ -178,11 +179,11 @@ class TontineController extends Controller
             'status' => false,
             'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
         ], 403);
-    }            
+    }
         // Vérification et formatage des dates
         $dateDemarrage = Carbon::parse($request->date_demarrage);
-        $dateFin = $request->date_fin 
-            ? Carbon::parse($request->date_fin) 
+        $dateFin = $request->date_fin
+            ? Carbon::parse($request->date_fin)
             : $dateDemarrage->copy()->addMonths($request->duree);
 
         if ($dateFin <= $dateDemarrage) {
@@ -240,14 +241,14 @@ class TontineController extends Controller
         if ($tontine->users->count() >= $tontine->nombre_personne) {
             return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
         }
-       
+
         $codeAdhesion = $request->input('code_adhesion');
-        
+
         if ($tontine->code_adhesion !== $codeAdhesion) {
             return response()->json(['message' => 'Code d\'adhésion incorrect.'], 422);
         }
         $createur = $tontine->users()->first(); // Supposons que le premier utilisateur de la tontine est le créateur
-        $createur->notify(new TontineNotification($tontine, [])); // Passez un tableau vide si aucune donnée supplémentaire n'est nécessaire      
+        $createur->notify(new TontineNotification($tontine, [])); // Passez un tableau vide si aucune donnée supplémentaire n'est nécessaire
           $users = auth()->user();
         $badgeActuel = $users->adhesions()->where('tontine_id', $tontine->id)->value('badge');
 
@@ -366,7 +367,7 @@ public function listeVersements()
     try {
         // Obtenir la date actuelle (mois/année)
         $moisActuel = now()->format('Y-m');
-        
+
         // Chercher tous les tirages dont la date_versement est dans le mois actuel
         $tirages = \App\Models\Tirage::with(['tontine', 'user'])
             ->where('date_versement', 'like', $moisActuel . '%')
@@ -454,8 +455,8 @@ public function listeVersements()
 
         return response()->json(['message' => 'Vous êtes déjà membre de cette tontine.'], 422);
     }
-    
-    
+
+
 
 public function filterByType(Request $request)
 {
@@ -582,9 +583,9 @@ public function programTirage(Request $request, Tontine $tontine)
 public function completeTirage(Request $request, Tontine $tontine, Tirage $tirage)
 {
     // Vérifiez que le tirage appartient à la tontine
-    
-    
-    
+
+
+
     if ($tirage->tontine_id !== $tontine->id) {
         return response()->json(['message' => 'Ce tirage n\'appartient pas à cette tontine.'], 403);
     }
