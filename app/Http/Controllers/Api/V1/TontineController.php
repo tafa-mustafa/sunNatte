@@ -151,7 +151,7 @@ class TontineController extends Controller
 
     public function store(Request $request)
 {
-    $request->validate([
+        $validated = $request->validate([
         'nom' => 'required',
         'nombre_personne' => 'required',
         'type' => 'required',
@@ -180,33 +180,41 @@ class TontineController extends Controller
             'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
         ], 403);
     }
-        // Vérification et formatage des dates
-        $dateDemarrage = Carbon::parse($request->date_demarrage);
-        $dateFin = $request->date_fin
-            ? Carbon::parse($request->date_fin)
-            : $dateDemarrage->copy()->addMonths($request->duree);
 
-        if ($dateFin <= $dateDemarrage) {
-            return response()->json(['message' => 'La date de fin doit être postérieure à la date de début.'], 422);
-        }
+            if (!empty($validated['date_demarrage']) && !empty($validated['duree'])) {
+                $dateDemarrage = Carbon::parse($validated['date_demarrage']);
+                $dateFin = $dateDemarrage->copy()->addMonths($validated['duree']);
+            } else {
+                $dateDemarrage = Carbon::now();
+                $dateFin = $dateDemarrage->copy()->addMonths($validated['duree'] ?? 1);
+            }
+            // Vérification et formatage des dates
+            $dateDemarrageStr = $dateDemarrage->format('Y-m-d');
+            $dateFinStr = $request->date_fin
+                ? Carbon::parse($request->date_fin)->format('Y-m-d')
+                : $dateFin->format('Y-m-d');
 
-        $tontine = Tontine::create([
-            'nom' => $request->nom,
-            'nombre_personne' => $request->nombre_personne,
-            'type' => $request->type,
-            'duree' => $request->duree,
-            'montant' => $request->montant,
-            'tirage' => $request->tirage,
-            'code_adhesion' => Str::random(10),
-            'materiel_id' => $request->materiel_id,
-            'date_demarrage' => $dateDemarrage->format('Y-m-d'),
-            'date_fin' => $dateFin->format('Y-m-d'),
-            'description' => $request->description,
-        ]);
+            if ($dateFinStr <= $dateDemarrageStr) {
+                return response()->json(['message' => 'La date de fin doit être postérieure à la date de début.'], 422);
+            }
 
-        $createur = Auth::user();
-        $tontine->users()->attach($createur->id);
-        $createur->adhesions()->update(['badge' => 'proprio']);
+            $tontine = Tontine::create([
+                'nom' => $validated['nom'],
+                'nombre_personne' => $validated['nombre_personne'],
+                'type' => $validated['type'],
+                'duree' => $validated['duree'],
+                'montant' => $validated['montant'],
+                'tirage' => $validated['tirage'],
+                'code_adhesion' => Str::random(10),
+                'materiel_id' => $validated['materiel_id'] ?? null,
+                'date_demarrage' => $dateDemarrageStr,
+                'date_fin' => $dateFinStr,
+                'description' => $validated['description'] ?? null,
+            ]);
+
+
+        $tontine->users()->attach($user->id);
+        $user->adhesions()->update(['badge' => 'proprio']);
 
         DB::commit();
 
