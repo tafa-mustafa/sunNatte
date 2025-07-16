@@ -50,14 +50,19 @@ class TontineNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $user= auth()->user();
-        $user_name = $user->nom ?? '';
-        $user_nam = $user->prenom ?? '';
+        if (isset($this->data['message'])) {
+            $message = $this->data['message'];
+        } else {
+            // Sinon, message d'adhésion par défaut
+            $prenom = $notifiable->prenom ?? '';
+            $nom = $notifiable->nom ?? '';
+            $message = $prenom . ' ' . $nom . " vient d'adhérer à votre tontine " . $this->tontine->nom;
+        }
         return [
         // 'tontine_id' => $this->tontine->id,
-        
-        'message'=>  $user_nam . $user_name. 'Vient d\' adherer a votre tontine'.  $this->tontine->nom,
-        ...$this->data
+
+            'message' => $message,
+            ...$this->data
         ];
     }
 }

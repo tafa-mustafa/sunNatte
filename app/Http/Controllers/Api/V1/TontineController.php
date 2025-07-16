@@ -204,7 +204,7 @@ class TontineController extends Controller
                 'type' => $validated['type'],
                 'duree' => $validated['duree'],
                 'montant' => $validated['montant'],
-                'tirage' => $validated['tirage'],
+                'tirage' => 'null',
                 'code_adhesion' => Str::random(10),
                 'materiel_id' => $validated['materiel_id'] ?? null,
                 'date_demarrage' => $dateDemarrageStr,
@@ -364,8 +364,15 @@ public function tirage(Tontine $tontine)
 
     // Enregistrer les tirages dans la base de données
     DB::table('tirages')->insert($tirages);
+        $tontine->update(['tirage' => 'complet']);
+    // Notifier les utilisateurs du tirage
 
-    return response()->json(['message' => 'Tirage effectué avec succès!', 'tirages' => $tirages]);
+        foreach ($tontine->users as $user) {
+            $user->notify(new TontineNotification($tontine, [
+                'message' => 'Le tirage a été effectué. Consultez votre date de versement.'
+            ]));
+        }
+        return response()->json(['message' => 'Tirage effectué avec succès!', 'tirages' => $tirages]);
 }
 
 
@@ -377,7 +384,7 @@ public function listeVersements()
         $moisActuel = now()->format('Y-m');
 
         // Chercher tous les tirages dont la date_versement est dans le mois actuel
-        $tirages = \App\Models\Tirage::with(['tontine', 'user'])
+        $tirages = Tirage::with(['tontine', 'user'])
             ->where('date_versement', 'like', $moisActuel . '%')
             ->get();
 
@@ -576,11 +583,13 @@ public function programTirage(Request $request, Tontine $tontine)
         return response()->json(['message' => 'Cet utilisateur a déjà été sélectionné pour un tirage dans cette tontine.'], 422);
     }
 
-    // Enregistrer le tirage programmé
+        $dateVersement = \Carbon\Carbon::parse($request->date_versement)->format('Y-m-d');
+
+        // Enregistrer le tirage programmé
     $tirage = Tirage::create([
         'tontine_id' => $tontine->id,
         'user_id' => $request->user_id,
-        'date_versement' => $request->date_versement,
+        'date_versement' => $dateVersement,
     ]);
 
     return response()->json(['message' => 'Tirage programmé avec succès.', 'tirage' => $tirage], 201);
