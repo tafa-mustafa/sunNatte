@@ -14,7 +14,7 @@ class Tontine extends Model
 {
     use HasFactory;
 
-    
+
         protected $fillable = [
             'nom',
             'nombre_personne',
@@ -22,6 +22,7 @@ class Tontine extends Model
             'duree',
             'montant',
             'tirage',
+            'statut_tirage',
             'statut',
             'code_adhesion',
             'materiel_id',
@@ -30,18 +31,18 @@ class Tontine extends Model
             'description',
         ];
 
-      
+
     public function users(): BelongsToMany
 
     {
 
         return $this->belongsToMany(User::class, 'adhesions', 'tontine_id', 'user_id')
-        
+
         ->withPivot('badge')
                 ->withTimestamps();
 
     }
-    
+
     public function contributions()
 {
     return $this->hasMany(Contribution::class);
@@ -57,7 +58,7 @@ class Tontine extends Model
     {
         return $this->belongsTo(Materiel::class);
     }
-    
+
     public function tirages()
 {
     return $this->hasMany(Tirage::class);

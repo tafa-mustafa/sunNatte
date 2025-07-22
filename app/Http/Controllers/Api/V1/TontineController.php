@@ -46,6 +46,7 @@ class TontineController extends Controller
                     'date_fin' => $tontine->date_fin,
                     'description' => $tontine->description,
                     'tirage' => $tontine->tirage,
+                    'statut_tirage' => $tontine->statut_tirage,
 
                 ];
                 $tontinesDetails[] = $tontineDetails;
@@ -111,6 +112,7 @@ class TontineController extends Controller
                     'montant' => $tontine->montant,
                     'type' => $tontine->type,
                     'tirage' => $tontine->tirage,
+                    'statut_tirage' => $tontine->statut_tirage,
                     'date_demarrage' => $tontine->date_demarrage,
                     'date_fin' => $tontine->date_fin,
                     'description' => $tontine->description,
@@ -158,6 +160,7 @@ class TontineController extends Controller
         'duree' => 'required|integer|min:1',
         'montant' => 'required|numeric|min:1',
         'tirage' => 'required',
+        'statut_tirage'=> 'nullable',
         'code_adhesion' => 'nullable|unique:tontines',
         'materiel_id' => 'nullable|exists:materiels,id',
         'date_demarrage' => 'nullable|date|after_or_equal:today',
@@ -171,10 +174,10 @@ class TontineController extends Controller
         $user = Auth::user();
 
  // 🔒 Vérifier la présence des documents CNI avant création
-    $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
-    $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+            $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
+            $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
 
-    if (!$cniRecto || !$cniVerso) {
+            if (!$cniRecto || !$cniVerso) {
         return response()->json([
             'status' => false,
             'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
@@ -204,7 +207,8 @@ class TontineController extends Controller
                 'type' => $validated['type'],
                 'duree' => $validated['duree'],
                 'montant' => $validated['montant'],
-                'tirage' => 'null',
+                'tirage' => $validated['tirage'],
+                'statut_tirage' => $validated['statut_tirage'] ?? null,
                 'code_adhesion' => Str::random(10),
                 'materiel_id' => $validated['materiel_id'] ?? null,
                 'date_demarrage' => $dateDemarrageStr,
@@ -236,10 +240,10 @@ class TontineController extends Controller
 
             $user = Auth::user();
         // 🔒 Vérifier la présence des documents CNI avant adhésion
-    $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
-    $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+        $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
+        $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
 
-    if (!$cniRecto || !$cniVerso) {
+        if (!$cniRecto || !$cniVerso) {
         return response()->json([
             'status' => false,
             'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour adhérer à une tontine.',
@@ -274,6 +278,12 @@ class TontineController extends Controller
     }
     public function show(Tontine $tontine)
     {
+        if (!$tontine ) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tontine introuvable.'
+            ], 404);
+        }
         $members = $tontine->users()->withPivot('badge')->get();
         $data = [
             'id' => $tontine->id,
@@ -284,7 +294,7 @@ class TontineController extends Controller
             'nombre_restant' => max(0, $tontine->nombre_personne - $tontine->users->count()),
             'duree' => $tontine->duree,
             'tirage' => $tontine->tirage,
-
+            'statut_tirage'=> $tontine->statut_tirage,
             'montant' => $tontine->montant,
             'type' => $tontine->type,
             'materiel_image' => $tontine->materiel ? $tontine->materiel->image : null,
@@ -313,7 +323,12 @@ class TontineController extends Controller
 
     public function show_mt(Materiel $materiel)
     {
-
+        if (!$materiel) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Materiel introuvable.'
+            ], 404);
+        }
         $data = $materiel->toArray();
 
         return response()->json($data);
@@ -324,6 +339,13 @@ class TontineController extends Controller
 
 public function tirage(Tontine $tontine)
 {
+
+        if (!$tontine) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tontine introuvable.'
+            ], 404);
+        }
     // Vérifier si un tirage a déjà été effectué
     if ($tontine->tirages()->exists()) {
         return response()->json(['message' => 'Le tirage a déjà été effectué pour cette tontine.'], 422);
@@ -364,7 +386,7 @@ public function tirage(Tontine $tontine)
 
     // Enregistrer les tirages dans la base de données
     DB::table('tirages')->insert($tirages);
-        $tontine->update(['tirage' => 'complet']);
+        $tontine->update(['statut_tirage' => 'complet']);
     // Notifier les utilisateurs du tirage
 
         foreach ($tontine->users as $user) {
@@ -447,8 +469,8 @@ public function listeVersements()
         $user = auth()->user();
 
             // 🔒 Vérifier la présence des documents CNI avant création
-        $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
-        $cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+        $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
+        $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
 
         if (!$cniRecto || !$cniVerso) {
             return response()->json([
@@ -524,6 +546,7 @@ public function filterByType(Request $request)
             'nombre_restant'          => max(0, $tontine->nombre_personne - $members->count()),
             'duree'                   => $tontine->duree,
             'tirage'                  => $tontine->tirage,
+            'statut_tirage'=> $tontine->statut_tirage,
             'montant'                 => $tontine->montant,
             'type'                    => $tontine->type,
             'materiel_image'          => optional($tontine->materiel)->image,
@@ -619,8 +642,13 @@ public function completeTirage(Request $request, Tontine $tontine, Tirage $tirag
 
     // Marquez le tirage comme complété
     $tirage->update(['status' => Tirage::STATUS_COMPLETED]);
+     $tontine->update(['statut_tirage' => 'complet']);
+    // Notifier l'utilisateur concerné par le tirage
+    $user->notify(new TontineNotification($tontine, [
+        'message' => 'Le tirage a été marqué comme complété. Consultez votre date de versement.'
+    ]));
 
-    return response()->json([
+        return response()->json([
         'message' => 'Le tirage a été marqué comme complété.',
         'tirage' => $tirage,
     ]);
@@ -642,8 +670,8 @@ public function addParticipant(Request $request, Tontine $tontine)
     $participant = User::findOrFail($request->user_id);
 
     // 🔒 Vérifier la présence des documents CNI du participant
-    $cniRecto = $participant->documents()->where('nom', 'cni_recto')->first();
-    $cniVerso = $participant->documents()->where('nom', 'cni_verso')->first();
+    $cniRecto = $participant->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
+    $cniVerso = $participant->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
 
     if (!$cniRecto || !$cniVerso) {
         return response()->json([

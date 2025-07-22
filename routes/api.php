@@ -24,7 +24,7 @@ Route::get('admin/test', [AdminController::class, 'test']);
     Route::get('payment/success', [ContributionController::class, 'success'])->name('payment.success');
     Route::get('payment/error', [ContributionController::class, 'error'])->name('payment.error');
 
-    
+
 
 Route::post('/users/login', [LoginController::class, 'login']);
 Route::post('/users/register', [RegisterController::class, 'register']);
@@ -77,7 +77,7 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
     //Route::get('tontines/{tontine}/mycontributes', [ContributionController::class, 'getContributionsByTontine']);
 
         Route::post('/wave/token', [ContributionController::class, 'getToken']);
-        
+
         Route::post('contribution/initiate/{tontine}', [ContributionController::class, 'initiateContribution'])->name('contribution.initiate');
 Route::post('contribution/confirm/{tontine}', [ContributionController::class, 'confirmPayment'])->name('contribution.confirm');
 
@@ -126,6 +126,8 @@ Route::post('admin/tontine/adhere_user/{tontine}', [AdminController::class,'adhe
     Route::patch('admin/users/{id}/activate', [AdminController::class, 'active_user']);    // Activer un utilisateur
     Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']); // Désactiver un utilisateur
     Route::get('admin/stats', [AdminController::class, 'statat']);                 // Créer un utilisateur
+    Route::get('admin/document/{id}', [AdminController::class, ' active_document_status']);
+      Route::get('admin/tontine/{id}', [AdminController::class, ' active_tontine_status']);                 // Créer un utilisateur
 
 
 /**********************NOTIFICATION */

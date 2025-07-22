@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 
+use App\Models\Document;
 use App\Models\User;
 use App\Models\Tontine;
 use Illuminate\Support\Str;
@@ -65,7 +66,13 @@ class AdminController extends Controller
     {
         $this->checkIsAdmin();
 
-        $users = User::where('role_id', '!=', 1)->get();
+        $users = User::where('role_id', '!=', 1)
+            ->with([
+                'documents' => function ($query) {
+                    $query->select( 'nom','image', 'statut');
+                }
+            ])
+            ->get();
         return response()->json($users);
     }
 
@@ -75,7 +82,12 @@ class AdminController extends Controller
     public function show_user(User $user)
     {
         $this->checkIsAdmin();
-
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User introuvable.'
+            ], 404);
+        }
         return response()->json($user);
     }
 
@@ -201,6 +213,7 @@ class AdminController extends Controller
         'duree' => 'nullable|integer',
         'montant' => 'nullable|numeric',
         'tirage' => 'nullable|string',
+        'statut_tirage' => 'nullable|string',
         'materiel_id' => 'nullable|exists:materiels,id',
         'date_demarrage' => 'nullable|date',
         'description' => 'nullable|string',
@@ -250,7 +263,12 @@ class AdminController extends Controller
     public function update_tontine(Request $request, $id)
     {
         $this->checkIsAdmin();
-
+        if (!$id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tontine introuvable.'
+            ], 404);
+        }
     $validated = $request->validate([
         'nom' => 'sometimes|required|string|max:255',
         'nombre_personne' => 'sometimes|required|integer',
@@ -258,6 +276,7 @@ class AdminController extends Controller
         'duree' => 'nullable|integer',
         'montant' => 'nullable|numeric',
         'tirage' => 'nullable|string',
+        'statut_tirage' => 'nullable|string',
         'materiel_id' => 'nullable|exists:materiels,id',
         'date_demarrage' => 'nullable|date',
         'description' => 'nullable|string',
@@ -299,7 +318,7 @@ class AdminController extends Controller
     /**
      * ✅ Activer/Désactiver une tontine
      */
-    public function toggle_tontine_status(Tontine $tontine, $status)
+    public function active_tontine_status(Tontine $tontine, $status)
     {
         $this->checkIsAdmin();
 
@@ -397,10 +416,37 @@ public function statat()
     }
 }
 
+/**
+ * ✅ Valider un document utilisateur
+ */
+
+    /**
+     * ✅ Activer/Désactiver une tontine
+     */
+    public function active_document_status(Document $document, $status)
+    {
+        $this->checkIsAdmin();
+
+
+        if (!$document) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Document introuvable.'
+            ], 404);
+        }
+
+
+        $document->statut = true;
+        $document->save();
+        $msg = $status ? 'activée' : 'désactivée';
+        return response()->json(['message' => "Tontine $msg avec succès"]);
+    }
+
+
 
   }
 
 
-  
-    
+
+
 
