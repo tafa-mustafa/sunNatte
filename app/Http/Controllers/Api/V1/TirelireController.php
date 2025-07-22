@@ -25,7 +25,7 @@ class TirelireController extends Controller
 
         $user = auth()->user();
 
-        // Créer une session de paiement via Wave
+      /*   // Créer une session de paiement via Wave
         $response = Http::withHeaders([
             "Authorization" => "Bearer " . env('WAVE_API_KEY'),
             "Content-Type" => "application/json"
@@ -46,7 +46,7 @@ class TirelireController extends Controller
 
         if (!$session_id || !$payment_url) {
             return response()->json(['error' => 'Session de paiement invalide.'], 500);
-        }
+        } */
 
         // Créer une tirelire en statut "pending"
         $tirelire = Tirelire::create([
@@ -60,16 +60,16 @@ class TirelireController extends Controller
         ]);
 
         // Sauvegarder la transaction
-        Transaction::create([
+       /*  Transaction::create([
             'tirelire_id' => $tirelire->id,
             'session_id' => $session_id,
             'montant' => $request->montant,
             'statut' => 'pending',
         ]);
-
+ */
         return response()->json([
             'message' => 'Session de paiement créée avec succès.',
-            'payment_url' => $payment_url,
+          //  'payment_url' => $payment_url,
             'tirelire' => $tirelire,
         ]);
     }
