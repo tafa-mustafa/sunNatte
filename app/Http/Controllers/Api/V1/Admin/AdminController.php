@@ -69,7 +69,7 @@ class AdminController extends Controller
         $users = User::where('role_id', '!=', 1)
             ->with([
                 'documents' => function ($query) {
-                    $query->select( 'nom','image', 'statut');
+                    $query->select( 'nom','document', 'statut');
                 }
             ])
             ->get();
