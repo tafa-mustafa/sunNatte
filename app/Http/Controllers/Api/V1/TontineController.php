@@ -174,15 +174,17 @@ class TontineController extends Controller
         $user = Auth::user();
 
  // 🔒 Vérifier la présence des documents CNI avant création
-            $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
-            $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
+            $cniRecto = $user->documents()->where('nom', 'cni_recto')->first();
+$cniVerso = $user->documents()->where('nom', 'cni_verso')->first();
+$passport = $user->documents()->where('nom', 'passport')->first();
 
-            if (!$cniRecto || !$cniVerso) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
-        ], 403);
-    }
+if (!(($cniRecto && $cniVerso) || $passport)) {
+    return response()->json([
+        'status' => false,
+        'message' => 'Vous devez uploader soit votre CNI (recto et verso), soit votre passeport pour adhérer à une tontine.',
+    ], 403);
+}
+
 
             if (!empty($validated['date_demarrage']) && !empty($validated['duree'])) {
                 $dateDemarrage = Carbon::parse($validated['date_demarrage']);
@@ -240,15 +242,17 @@ class TontineController extends Controller
 
             $user = Auth::user();
         // 🔒 Vérifier la présence des documents CNI avant adhésion
-        $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
-        $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
 
-        if (!$cniRecto || !$cniVerso) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour adhérer à une tontine.',
-        ], 403);
-    }
+        $cniRecto = $user->documents()->where('nom', 'cni_recto'); // where('statut', true)->first();
+        $cniVerso = $user->documents()->where('nom', 'cni_verso');
+        // where('statut', true)->first();
+        $passport = $user->documents()->where('nom', 'passport'); //->where('statut', true)->first();
+        if (!(($cniRecto && $cniVerso) || $passport)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Vous devez uploader soit votre CNI (recto et verso), soit votre passeport pour adhérer à une tontine.',
+            ], 403);
+        }
        // $createur = $tontine->users()->withPivot('badge' = 'systems')->get();
         if ($tontine->users->count() >= $tontine->nombre_personne) {
             return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
@@ -469,13 +473,14 @@ public function listeVersements()
         $user = auth()->user();
 
             // 🔒 Vérifier la présence des documents CNI avant création
-        $cniRecto = $user->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
-        $cniVerso = $user->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
-
-        if (!$cniRecto || !$cniVerso) {
+        $cniRecto = $user->documents()->where('nom', 'cni_recto'); // where('statut', true)->first();
+        $cniVerso = $user->documents()->where('nom', 'cni_verso');
+        // where('statut', true)->first();
+        $passport = $user->documents()->where('nom', 'passport'); //->where('statut', true)->first();
+        if (!(($cniRecto && $cniVerso) || $passport)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Vous devez d’abord uploader votre CNI recto et verso pour créer une tontine.',
+                'message' => 'Vous devez uploader soit votre CNI (recto et verso), soit votre passeport pour adhérer à une tontine.',
             ], 403);
         }
         if (!$tontine->users->contains($user)) {
@@ -670,15 +675,16 @@ public function addParticipant(Request $request, Tontine $tontine)
     $participant = User::findOrFail($request->user_id);
 
     // 🔒 Vérifier la présence des documents CNI du participant
-    $cniRecto = $participant->documents()->where('nom', 'cni_recto')->where('statut', true)->first();
-    $cniVerso = $participant->documents()->where('nom', 'cni_verso')->where('statut', true)->first();
-
-    if (!$cniRecto || !$cniVerso) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Ce participant doit uploader sa CNI recto et verso avant d’être ajouté.',
-        ], 403);
-    }
+        $cniRecto = $participant->documents()->where('nom', 'cni_recto'); // where('statut', true)->first();
+        $cniVerso = $participant->documents()->where('nom', 'cni_verso');
+        // where('statut', true)->first();
+        $passport = $participant->documents()->where('nom', 'passport'); //->where('statut', true)->first();
+        if (!(($cniRecto && $cniVerso) || $passport)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Vous devez uploader soit votre CNI (recto et verso), soit votre passeport pour adhérer à une tontine.',
+            ], 403);
+        }
 
     if ($tontine->users->count() >= $tontine->nombre_personne) {
         return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
