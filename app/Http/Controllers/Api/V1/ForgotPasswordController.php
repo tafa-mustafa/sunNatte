@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Twilio\Rest\Client;
-use Illuminate\Support\Str;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,26 +21,12 @@ class ForgotPasswordController extends Controller
         $code = rand(1111, 9999); // Generate a random 4-digit code
 
         $user->update(['reset_code' => $code]);
-        $this->sendSms($user->phone, $code);
+        app(\App\Services\SmsGateway::class)->send(
+            $user->phone,
+            'Votre code Sunu Natt : '.$code
+        );
 
         return response()->json(['message' => 'Reset code sent successfully']);
-    }
-
-    private function sendSms($to, $code)
-    {
-        $sid = config('services.twilio.sid');
-        $token = config('services.twilio.auth_token');
-        $twilioPhoneNumber = config('services.twilio.from');
-
-        $client = new Client($sid, $token);
-
-        $client->messages->create(
-            $to,
-            [
-                'from' => $twilioPhoneNumber,
-                'body' => "Your reset code is: $code",
-            ]
-        );
     }
 
 

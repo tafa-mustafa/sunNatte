@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Document;
 use App\Models\Tontine;
-use App\Notifications\AdhesionNotification;
+use App\Http\Controllers\Api\V1\AdhesionController;
 use Validator;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -133,9 +133,20 @@ class UserController extends Controller
         $success['avatar'] = $user->avatar;
         $success['profession'] = $user->profession;
         $success['adresse'] = $user->adresse;
-        $success['avatar'] = $user->avatar;
-        return $success;
+        $success['completeness'] = app(\App\Services\ProfileCompletenessService::class)
+            ->inspect($user, $user->documents()->count());
 
+        return $success;
+    }
+
+    public function completeness(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json(
+            app(\App\Services\ProfileCompletenessService::class)
+                ->inspect($user, $user->documents()->count())
+        );
     }
 
 
@@ -163,28 +174,10 @@ class UserController extends Controller
     }
 
 
-    public function demande(Tontine $tontine){
+    public function demande(Request $request, Tontine $tontine)
+    {
+        $request->merge(['tontine_id' => $tontine->id]);
 
-        if ($tontine->users->count() >= $tontine->nombre_personne) {
-            return response()->json(['message' => 'Le nombre maximum de participants est atteint.'], 422);
-        }
-        $user = Auth::user();
-
-        // Vérifier si l'utilisateur a déjà adhéré à la tontine
-        if ($tontine->users->contains($user)) {
-            return response()->json(['message' => 'Vous êtes déjà membre de cette tontine.'], 422);
-        }
-
-        // Vérifier si l'utilisateur a des documents
-        $documents = $user->documents()->count();
-        if ($documents > 0) {
-            $createur = $tontine->users()->first(); 
-            $createur->notify(new AdhesionNotification($tontine, [])); // Passez un tableau vide si aucune donnée supplémentaire n'est nécessaire
-
-            return response()->json(['message' => 'Demande envoyée avec succès.'], 200);
-        } else {
-            return response()->json(['message' => 'Vous devez d\'abord soumettre des documents.'], 422);
-        }
-
+        return app(AdhesionController::class)->store($request);
     }
 }

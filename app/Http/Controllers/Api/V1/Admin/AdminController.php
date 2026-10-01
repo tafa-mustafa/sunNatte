@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\User;
 use App\Models\Tontine;
+use App\Models\Adhesion;
 use Illuminate\Support\Str;
 use App\Http\Helpers\Helper;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Support\Carbon;
 use App\Rules\MatchOldPassword;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\AdhesionController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -188,6 +190,7 @@ class AdminController extends Controller
             'nom' => 'required|string|max:255',
             'nombre_personne' => 'required|integer',
             'type' => 'nullable|string',
+            'visibilite' => 'nullable|in:catalogue,privee',
             'duree' => 'nullable|integer',
             'montant' => 'nullable|numeric',
             'tirage' => 'nullable|integer',
@@ -199,7 +202,8 @@ class AdminController extends Controller
         try {
             DB::beginTransaction();
 
-            $validated['code_adhesion'] = Str::random(10);
+            $validated['code_adhesion'] = app(\App\Services\TontineInviteService::class)->generateUnique();
+            $validated['visibilite'] = $validated['visibilite'] ?? \App\Models\Tontine::VISIBILITE_CATALOGUE;
 
             if (isset($validated['date_demarrage']) && $validated['duree']) {
                 $dateDemarrage = Carbon::parse($validated['date_demarrage']);
@@ -272,6 +276,27 @@ class AdminController extends Controller
         return response()->json($success);
 
 
+    }
+
+    public function adherer_user(Request $request, Tontine $tontine)
+    {
+        $this->checkIsAdmin();
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $adhesion = Adhesion::where('tontine_id', $tontine->id)
+            ->where('user_id', $request->user_id)
+            ->first();
+
+        if (! $adhesion) {
+            return response()->json(['message' => 'Aucune demande d\'adhésion trouvée.'], 404);
+        }
+
+        $request->merge(['action' => 'approve']);
+
+        return app(AdhesionController::class)->review($request, $adhesion);
     }
 
 }

@@ -9,7 +9,16 @@ class Adhesion extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['badge','ordre_tirage'];
+    protected $fillable = [
+        'badge',
+        'ordre_tirage',
+        'tontine_id',
+        'user_id',
+        'statut',
+        'motif_rejet',
+        'reviewed_at',
+        'reviewed_by',
+    ];
 
     public $timestamps = true;
 

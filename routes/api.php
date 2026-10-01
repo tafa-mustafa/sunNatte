@@ -2,6 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\LedgerController;
+use App\Http\Controllers\Api\V1\NotificationPreferenceController;
+use App\Http\Controllers\Api\V1\MutuelleController;
+use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\TontineInviteController;
+use App\Http\Controllers\Api\V1\AdhesionController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\Admin\TarifController;
@@ -39,20 +46,32 @@ Route::post('/mobile/sendCode', [RegisterController::class, 'mobile']);
 Route::post('/mobile/verify', [RegisterController::class, 'verify']);
 Route::post('/users/send-otp', [ForgotPasswordController::class, 'sendResetCode']);
 Route::post('/users/reset-password', [ForgotPasswordController::class, 'resetPassword']);
+Route::post('/webhooks/wave', [PaymentController::class, 'waveWebhook']);
 
 Route::group(['middleware' => 'auth:sanctum'], function (){
 
 Route::post('/users/logout', [UserController::class, 'logout']);
 Route::post('/users/update/password', [UserController::class, 'update_pass']);
 Route::post('/users/update/profile/{user}', [UserController::class, 'update']);
+Route::get('/home', HomeController::class);
 Route::get('/users/profile', [UserController::class, 'moi']);
+Route::get('/profile/completeness', [UserController::class, 'completeness']);
 Route::get('/users/{user}', [UserController::class, 'show']);
 Route::post('/users/add', [UserController::class, 'store']);
 
 /********************************TONTINE *********************/
 
 Route::post('tontine/create', [TontineController::class, 'store']);
-Route::post('tontine/adhesion', [TontineController::class, 'adhesion_tontine']);
+Route::post('tontine/adhesion', [TontineInviteController::class, 'joinByCode']);
+Route::post('/tontines/join-by-code', [TontineInviteController::class, 'joinByCode']);
+Route::get('/tontines/{tontine}/share', [TontineInviteController::class, 'share']);
+Route::post('/adhesions', [AdhesionController::class, 'store']);
+Route::get('/adhesions/mine', [AdhesionController::class, 'mine']);
+Route::get('/adhesions/pending', [AdhesionController::class, 'pending']);
+Route::patch('/adhesions/{adhesion}', [AdhesionController::class, 'update']);
+Route::post('/adhesions/{adhesion}/review', [AdhesionController::class, 'review']);
+Route::get('/admin/adhesions/pending', [AdhesionController::class, 'pending']);
+Route::post('/admin/adhesions/{adhesion}/review', [AdhesionController::class, 'review']);
 Route::get('tontine/{tontine}/detail', [TontineController::class, 'show']);
 Route::get('tontine/{tontine}/tirage', [TontineController::class, 'tirage']);
 Route::get('tontine/{tontine}/listeVersements', [TontineController::class, 'listeVersements']);
@@ -79,6 +98,22 @@ Route::post('users/document', [DocumentController::class,'doc_user']);
         
         Route::post('contribution/initiate/{tontine}', [ContributionController::class, 'initiateContribution'])->name('contribution.initiate');
 Route::post('contribution/confirm/{tontine}', [ContributionController::class, 'confirmPayment'])->name('contribution.confirm');
+Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
+Route::get('/receipts/{contribution}', [PaymentController::class, 'receipt']);
+Route::get('/ledger', [LedgerController::class, 'index']);
+Route::get('/ledger/export.pdf', [LedgerController::class, 'export']);
+Route::get('/notifications/preferences', [NotificationPreferenceController::class, 'index']);
+Route::put('/notifications/preferences', [NotificationPreferenceController::class, 'update']);
+
+Route::get('/mutuelles/template', [MutuelleController::class, 'template']);
+Route::get('/mutuelles', [MutuelleController::class, 'index']);
+Route::post('/mutuelles', [MutuelleController::class, 'store']);
+Route::get('/mutuelles/{mutuelle}', [MutuelleController::class, 'show']);
+Route::get('/mutuelles/{mutuelle}/preview', [MutuelleController::class, 'preview']);
+Route::post('/mutuelles/{mutuelle}/beneficiaires', [MutuelleController::class, 'syncBeneficiaires']);
+Route::post('/mutuelles/{mutuelle}/import', [MutuelleController::class, 'import']);
+Route::post('/mutuelles/{mutuelle}/fund', [MutuelleController::class, 'fund']);
+Route::post('/mutuelles/{mutuelle}/repay', [MutuelleController::class, 'repay']);
 
 Route::get('contribution/{id}', [ContributionController::class, 'getContributionDetail'])->name('ContributionDetail.get');
 
@@ -90,6 +125,7 @@ Route::post('/tirelire/payment/confirmed/{tirelire}', [TirelireController::class
 Route::post('/tirelire/create', [TirelireController::class, 'createTirelire']);
 Route::get('/tirelires/my-tirelires', [TirelireController::class, 'myTirelires']);
 Route::get('/tirelires/{id}', [TirelireController::class, 'showTirelire']);
+Route::get('/tirelires/{tirelire}/retrait/preview', [TirelireController::class, 'previewRetrait']);
 Route::post('/tirelires/{tirelire}/retrait', [TirelireController::class, 'retirait']);
 Route::post('/tirelires/{tirelire}/retraits', [TirelireController::class, 'retrait_any']);
 

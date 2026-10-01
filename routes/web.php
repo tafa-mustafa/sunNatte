@@ -9,3 +9,4 @@ Route::get('/a-propos', [PageController::class, 'aPropos'])->name('a-propos');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::get('/mentions-legales', [PageController::class, 'mentionsLegales'])->name('mentions-legales');
+Route::get('/join/{code}', [PageController::class, 'join'])->name('join');

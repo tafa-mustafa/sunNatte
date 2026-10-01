@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\TontineNotification;
 use App\Models\{Tontine, User, Adhesion, Materiel};
+use App\Services\TontineInviteService;
 use Illuminate\Support\Str;
 use App\Models\Tirage;
 class TontineController extends Controller
@@ -165,6 +166,14 @@ class TontineController extends Controller
         'description' => 'nullable',
     ]);
 
+    $createur = Auth::user();
+    $incomplete = app(\App\Services\ProfileCompletenessService::class)
+        ->incompleteResponse($createur, $createur->documents()->count(), 'create_tontine');
+
+    if ($incomplete) {
+        return response()->json($incomplete, 422);
+    }
+
     try {
         DB::beginTransaction();
 
@@ -185,7 +194,8 @@ class TontineController extends Controller
             'duree' => $request->duree,
             'montant' => $request->montant,
             'tirage' => $request->tirage,
-            'code_adhesion' => Str::random(10),
+            'code_adhesion' => app(TontineInviteService::class)->generateUnique(),
+            'visibilite' => Tontine::VISIBILITE_PRIVEE,
             'materiel_id' => $request->materiel_id,
             'date_demarrage' => $dateDemarrage->format('Y-m-d'),
             'date_fin' => $dateFin->format('Y-m-d'),
@@ -193,12 +203,14 @@ class TontineController extends Controller
         ]);
 
         $createur = Auth::user();
-        $tontine->users()->attach($createur->id);
-        $createur->adhesions()->update(['badge' => 'proprio']);
+        $tontine->users()->attach($createur->id, [
+            'badge' => 'proprio',
+            'statut' => 'approved',
+        ]);
 
         DB::commit();
 
-        return response()->json(['message' => 'Tontine créée avec succès!'], 201);
+        return response()->json(app(TontineInviteService::class)->createdPayload($tontine), 201);
 
     } catch (\Exception $e) {
         DB::rollBack();
@@ -230,8 +242,10 @@ class TontineController extends Controller
 
         if (!$tontine->users->contains($users)) {
 
-            $tontine->users()->attach($users);
-            $users->adhesions()->update(['badge' => 'membre']);
+            $tontine->users()->attach($users->id, [
+                'badge' => 'membre',
+                'statut' => 'approved',
+            ]);
 
             return response()->json(['message' => 'Adhesion Fait'], 200);
         }
@@ -365,32 +379,7 @@ public function listeVersements(Tontine $tontine)
 
     public function adhesion_tontine(Request $request)
     {
-        $codeAdhesion = $request->input('code_adhesion');
-
-        $tontine = Tontine::where('code_adhesion', $codeAdhesion)->first();
-
-        if (!$tontine) {
-            return response()->json(['message' => 'Aucune tontine correspondant à ce code d\'adhésion.'], 404);
-        }
-
-        if ($tontine->users->count() >= $tontine->nombre_personne) {
-            return response()->json(['message' => 'Le nombre maximum de participants est atteint pour cette tontine.'], 422);
-        }
-
-        $user = auth()->user();
-        if (!$tontine->users->contains($user)) {
-            $tontine->users()->attach($user);
-            $user->adhesions()->update(['badge' => 'membre']);
-
-            // Notifier le créateur de la tontine s'il existe
-            if ($createur = $tontine->users()->first()) {
-                $createur->notify(new TontineNotification($tontine, []));
-            }
-
-            return response()->json(['message' => 'Adhesion faite, une notification a été envoyée.'], 200);
-        }
-
-        return response()->json(['message' => 'Vous êtes déjà membre de cette tontine.'], 422);
+        return app(TontineInviteController::class)->joinByCode($request);
     }
     
     
@@ -407,7 +396,10 @@ public function listeVersements(Tontine $tontine)
     $nom  = $request->input('nom');
 
     // Construire la requête dynamique
-    $query = Tontine::query();
+    $query = Tontine::query()->where(function ($q) {
+        $q->where('visibilite', Tontine::VISIBILITE_CATALOGUE)
+            ->orWhereNull('visibilite');
+    });
 
     if ($type) {
         $query->where('type', $type);
@@ -569,7 +561,7 @@ public function addParticipant(Request $request, Tontine $tontine)
     }
 
     // Ajouter le participant avec un badge par défaut (par exemple, "membre")
-    $tontine->users()->attach($newParticipantId, ['badge' => 'membre']);
+    $tontine->users()->attach($newParticipantId, ['badge' => 'membre', 'statut' => 'approved']);
 
     return response()->json(['message' => 'Participant ajouté avec succès.'], 200);
 }

@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\TirelireWithdrawalService;
 use Illuminate\Http\Request;
 use App\Models\Tirelire;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
 class TirelireController extends Controller
 {
+    public function __construct(private TirelireWithdrawalService $withdrawals)
+    {
+    }
+
       public function createTirelire(Request $request)
     {
         $request->validate([
@@ -211,16 +218,18 @@ public function showTirelire($id)
         return response()->json(['error' => 'Tirelire non trouvée.'], 404);
     }
 
+    $solde = (float) $tirelire->montant;
+
     return response()->json([
         'id' => $tirelire->id,
         'titre' => $tirelire->titre,
         'montant_objectif' => $tirelire->montant_objectif,
         'objectif' => $tirelire->objectif,
-
         'montant' => $tirelire->montant,
-        'objectif' => $tirelire->objectif,
         'date_debut' => $tirelire->date_debut,
         'date_fin' => $tirelire->date_fin,
+        'statut' => $tirelire->statut,
+        'retrait' => $this->withdrawals->quote($tirelire, $solde > 0 ? $solde : 0),
         'transactions' => $tirelire->transactions->map(function ($transaction) {
             return [
                 'id' => $transaction->id,
@@ -231,222 +240,124 @@ public function showTirelire($id)
     ], 200);
 }
 
-public function retrait(Tirelire $tirelire)
+public function previewRetrait(Request $request, Tirelire $tirelire)
 {
-    // Vérifier que l'utilisateur est autorisé
+    $request->validate([
+        'montant' => 'nullable|numeric|min:1',
+    ]);
+
     $user = auth()->user();
-    if ($tirelire->user_id !== $user->id) {
-        return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
+    $montant = (float) ($request->input('montant') ?? $tirelire->montant);
+    $blocked = $this->withdrawals->guard($tirelire, $user, $montant);
+
+    if ($blocked) {
+        return response()->json($blocked, $blocked['status']);
     }
 
-    // Vérifier que la date de fin est dépassée
-    if ($tirelire->date_fin > now()) {
-        return response()->json(['error' => 'La date de fin n\'est pas encore atteinte.'], 400);
-    }
-
-    // Vérifier que la tirelire n'est pas déjà terminée
-    if ($tirelire->statut === 'termine') {
-        return response()->json(['error' => 'Le retrait a déjà été effectué pour cette tirelire.'], 400);
-    }
-
-    // Effectuer le retrait via l'API de Payout de Wave
-    try {
-        $response = Http::withHeaders([
-            "Authorization" => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type" => "application/json"
-        ])->post("https://api.wave.com/v1/payout", [
-            "amount" => $tirelire->montant,
-            "currency" => "XOF",
-            "recipient" => [
-                "type" => "mobile",
-                "number" => $user->mobile_number, // Assurez-vous que l'utilisateur a un numéro de mobile enregistré
-            ],
-            "description" => "Retrait de la tirelire ID: {$tirelire->id}",
-        ]);
-
-        if ($response->failed()) {
-            throw new \Exception('Erreur lors du retrait des fonds.');
-        }
-
-        $payout = $response->json();
-
-        // Mettre à jour la tirelire
-        $tirelire->statut = 'termine';
-        $tirelire->save();
-
-        return response()->json([
-            'message' => 'Retrait effectué avec succès.',
-            'payout' => $payout,
-            'tirelire' => $tirelire,
-        ]);
-    } catch (\Exception $e) {
-        Log::error("Erreur lors du retrait pour la tirelire ID: {$tirelire->id} - " . $e->getMessage());
-        return response()->json(['error' => 'Une erreur est survenue lors du retrait.'], 500);
-    }
+    return response()->json([
+        'quote' => $this->withdrawals->quote($tirelire, $montant),
+        'message' => $this->withdrawals->isMature($tirelire)
+            ? 'Retrait à l\'échéance : frais de 1,5 %.'
+            : 'Retrait anticipé : pénalité de 5 %. Confirmez avec accept_penalty=true.',
+    ]);
 }
 
 public function retirait(Request $request, Tirelire $tirelire)
 {
-    $request->validate([
-        'montant'    => 'required|numeric|min:1',
-        'wave_phone' => 'nullable|string',
-    ]);
-
-    $user = auth()->user();
-
-    if ($tirelire->user_id !== $user->id) {
-        return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
-    }
-
-    if ($tirelire->date_fin > now()) {
-        return response()->json(['error' => 'La date de fin n\'est pas encore atteinte.'], 400);
-    }
-
-    if ($tirelire->statut === 'termine') {
-        return response()->json(['error' => 'Le retrait a déjà été effectué pour cette tirelire.'], 400);
-    }
-
-    if ($tirelire->montant < $request->montant) {
-        return response()->json(['message' => 'Montant insuffisant'], 422);
-    }
-
-    // 🔢 Appliquer la commission de 1.5%
-    $commissionRate = 0.015;
-    $commission = round($request->montant * $commissionRate, 0); // arrondi à l'entier
-    $netAmount = $request->montant - $commission;
-
-    try {
-        DB::beginTransaction();
-
-        $idempotencyKey = \Illuminate\Support\Str::uuid()->toString();
-
-        $waveResponse = \Illuminate\Support\Facades\Http::withHeaders([
-            "Authorization"   => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type"    => "application/json",
-            "Idempotency-Key" => $idempotencyKey,
-        ])->post('https://api.wave.com/v1/payout', [
-            'receive_amount' => (string) $netAmount,
-            'currency'       => 'XOF',
-            'mobile'         => $request->wave_phone ?? $user->phone,
-        ]);
-
-        if (!$waveResponse->successful()) {
-            DB::rollBack();
-            return response()->json([
-                'error'   => 'Erreur API Wave',
-                'details' => $waveResponse->json()
-            ], 500);
-        }
-
-        $waveData = $waveResponse->json();
-        $session_id = $waveData['id'] ?? null;
-
-        if (!$session_id) {
-            DB::rollBack();
-            return response()->json(['error' => 'Session ID introuvable dans la réponse Wave.'], 500);
-        }
-
-        $tirelire->transactions()->create([
-            'montant'    => -$request->montant, // le montant demandé est retiré de la tirelire
-            'user_id'    => $user->id,
-            'session_id' => $session_id,
-            'commission' => $commission,
-        ]);
-
-        $tirelire->montant -= $request->montant;
-        $tirelire->save();
-
-        DB::commit();
-
-        return response()->json([
-            'message'    => 'Retrait effectué avec succès via Wave',
-            'retrait_net' => $netAmount,
-            'commission' => $commission,
-            'wave'       => $waveData,
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
-    }
+    return $this->withdraw($request, $tirelire);
 }
-
 
 public function retrait_any(Request $request, Tirelire $tirelire)
 {
+    return $this->withdraw($request, $tirelire);
+}
+
+private function withdraw(Request $request, Tirelire $tirelire)
+{
     $request->validate([
-        'montant'    => 'required|numeric|min:1',
+        'montant' => 'required|numeric|min:1',
         'wave_phone' => 'nullable|string',
+        'accept_penalty' => 'sometimes|boolean',
     ]);
 
     $user = auth()->user();
+    $montant = (float) $request->montant;
+    $blocked = $this->withdrawals->guard($tirelire, $user, $montant);
 
-    if ($tirelire->user_id !== $user->id) {
-        return response()->json(['error' => 'Vous n\'êtes pas autorisé à effectuer un retrait sur cette tirelire.'], 403);
+    if ($blocked) {
+        return response()->json($blocked, $blocked['status']);
     }
 
-    
+    $quote = $this->withdrawals->quote($tirelire, $montant);
 
-    if ($tirelire->montant < $request->montant) {
-        return response()->json(['message' => 'Montant insuffisant'], 422);
+    if ($quote['early'] && ! $request->boolean('accept_penalty')) {
+        return response()->json([
+            'code' => 'PENALTY_NOT_ACCEPTED',
+            'message' => 'Le retrait anticipé entraîne une pénalité de '.$quote['rate_percent'].' %. Confirmez avec accept_penalty=true.',
+            'quote' => $quote,
+        ], 422);
     }
-
-    // 🔢 Appliquer la commission de 1.5%
-    $commissionRate = 0.05;
-    $commission = round($request->montant * $commissionRate, 0); // arrondi à l'entier
-    $netAmount = $request->montant - $commission;
 
     try {
         DB::beginTransaction();
 
-        $idempotencyKey = \Illuminate\Support\Str::uuid()->toString();
-
-        $waveResponse = \Illuminate\Support\Facades\Http::withHeaders([
-            "Authorization"   => "Bearer " . env('WAVE_API_KEY'),
-            "Content-Type"    => "application/json",
-            "Idempotency-Key" => $idempotencyKey,
+        $waveResponse = Http::withHeaders([
+            'Authorization' => 'Bearer '.env('WAVE_API_KEY'),
+            'Content-Type' => 'application/json',
+            'Idempotency-Key' => Str::uuid()->toString(),
         ])->post('https://api.wave.com/v1/payout', [
-            'receive_amount' => (string) $netAmount,
-            'currency'       => 'XOF',
-            'mobile'         => $request->wave_phone ?? $user->phone,
+            'receive_amount' => (string) $quote['net'],
+            'currency' => 'XOF',
+            'mobile' => $request->wave_phone ?? $user->phone,
         ]);
 
-        if (!$waveResponse->successful()) {
+        if (! $waveResponse->successful()) {
             DB::rollBack();
             return response()->json([
-                'error'   => 'Erreur API Wave',
-                'details' => $waveResponse->json()
+                'error' => 'Erreur API Wave',
+                'details' => $waveResponse->json(),
             ], 500);
         }
 
         $waveData = $waveResponse->json();
         $session_id = $waveData['id'] ?? null;
 
-        if (!$session_id) {
+        if (! $session_id) {
             DB::rollBack();
             return response()->json(['error' => 'Session ID introuvable dans la réponse Wave.'], 500);
         }
 
         $tirelire->transactions()->create([
-            'montant'    => -$request->montant, // le montant demandé est retiré de la tirelire
-            'user_id'    => $user->id,
+            'montant' => -$montant,
+            'user_id' => $user->id,
             'session_id' => $session_id,
-            'commission' => $commission,
+            'commission' => $quote['fee'],
+            'statut' => 'succeeded',
+            'type' => $quote['fee_type'],
         ]);
 
-        $tirelire->montant -= $request->montant;
+        $tirelire->montant -= $montant;
+        if ((float) $tirelire->montant <= 0) {
+            $tirelire->statut = 'termine';
+        }
         $tirelire->save();
 
         DB::commit();
 
         return response()->json([
-            'message'    => 'Retrait effectué avec succès via Wave',
-            'retrait_net' => $netAmount,
-            'commission' => $commission,
-            'wave'       => $waveData,
+            'message' => $quote['early']
+                ? 'Retrait anticipé effectué. Une pénalité de '.$quote['rate_percent'].' % a été appliquée.'
+                : 'Retrait effectué avec succès via Wave',
+            'retrait_net' => $quote['net'],
+            'commission' => $quote['fee'],
+            'quote' => $quote,
+            'wave' => $waveData,
         ]);
     } catch (\Exception $e) {
         DB::rollBack();
-        return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
+        Log::error('Erreur retrait tirelire '.$tirelire->id.' : '.$e->getMessage());
+
+        return response()->json(['error' => 'Erreur : '.$e->getMessage()], 500);
     }
 }
 

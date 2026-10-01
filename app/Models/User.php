@@ -21,7 +21,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-   protected $fillable = ['nom','password', 'prenom',"phone", 'profession', 'adresse', 'num_cni', 'num_passport', 'bank', 'phone2', 'avatar','reset_code'];
+   protected $fillable = ['nom','password', 'prenom',"phone", 'profession', 'adresse', 'num_cni', 'num_passport', 'bank', 'phone2', 'avatar','reset_code', 'preferred_payment_method'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -55,7 +55,10 @@ class User extends Authenticatable
         public function tontines(): BelongsToMany
     {
 
-        return $this->belongsToMany(Tontine::class, 'adhesions', 'user_id','tontine_id');
+        return $this->belongsToMany(Tontine::class, 'adhesions', 'user_id','tontine_id')
+            ->withPivot('badge', 'statut', 'motif_rejet')
+            ->withTimestamps()
+            ->wherePivot('statut', 'approved');
 
     }
     
@@ -85,6 +88,11 @@ class User extends Authenticatable
 public function tirelires()
 {
     return $this->hasMany(Tirelire::class);
+}
+
+public function mutuelles()
+{
+    return $this->hasMany(Mutuelle::class, 'createur_id');
 }
 
 }

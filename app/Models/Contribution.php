@@ -14,9 +14,10 @@ class Contribution extends Model
         'tontine_id',
         'user_id',
         'transaction_id',
-        'date_contribution'
-    
-
+        'date_contribution',
+        'statut',
+        'provider',
+        'recu_path',
     ];
     
     protected $dates = ['date_contribution'];
