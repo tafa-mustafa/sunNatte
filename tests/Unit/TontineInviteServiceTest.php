@@ -48,6 +48,8 @@ class TontineInviteServiceTest extends TestCase
         $this->assertStringContainsString('K7P2QM', $share['text']);
         $this->assertStringContainsString('GIE Liberté 6', $share['text']);
         $this->assertStringStartsWith('https://wa.me/?text=', $share['whatsapp']);
+        $this->assertStringContainsString('intent://join/K7P2QM', $share['intent']);
+        $this->assertStringContainsString('com.teknon.sununatt', $share['intent']);
     }
 
     public function test_simulation_uses_monthly_share_and_duration(): void

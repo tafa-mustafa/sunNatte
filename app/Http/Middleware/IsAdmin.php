@@ -18,10 +18,14 @@ class IsAdmin
 
         $user = auth()->user();
 
-        if (!$user || $user->role_id != 1) {
-            return response()->json([
-                'message' => 'Accès refusé : vous n\'êtes pas administrateur.'
-            ], 403);
+        if (! $user || (int) $user->role_id !== 1) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Accès refusé : vous n\'êtes pas administrateur.',
+                ], 403);
+            }
+
+            return redirect()->route('admin.login');
         }
 
         return $next($request);

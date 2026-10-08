@@ -65,9 +65,13 @@ class TontineInviteService
         }
         $text .= ". Code d'accès : {$code}";
 
+        $package = (string) config('tontine.android_package');
+        $intent = 'intent://join/'.$code.'#Intent;scheme=https;package='.$package.';S.browser_fallback_url='.rawurlencode($url).';end';
+
         return [
             'code' => $code,
             'url' => $url,
+            'intent' => $intent,
             'text' => $text,
             'whatsapp' => 'https://wa.me/?text='.rawurlencode($text),
         ];

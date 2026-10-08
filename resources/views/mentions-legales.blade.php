@@ -1,35 +1,34 @@
 @extends('layouts.app')
 
-@section('title', 'Mentions légales — SUNUNATT')
+@section('title', 'Mentions légales SUNUNATT')
 @section('description', 'Informations légales obligatoires relatives à l\'éditeur, l\'hébergement et à la protection des données personnelles de SUNUNATT.')
 
 @section('content')
 
 <!-- HERO -->
-<section class="hero" style="background:linear-gradient(160deg,var(--blue) 0%,var(--blue-navy) 100%);padding:72px 24px 56px;text-align:center;color:white;">
-  <h1 style="font-size:clamp(32px,5vw,52px);font-weight:800;margin-bottom:16px;">Mentions Légales</h1>
-  <p class="hero-sub" style="font-size:17px;max-width:520px;margin:0 auto;line-height:1.6;opacity:0.85;">
-    Informations légales obligatoires relatives à l'éditeur, l'hébergement et à la protection des données personnelles de SUNUNATT.
-  </p>
-  <p class="hero-date" style="margin-top:24px;font-size:13px;opacity:0.6;">
-    Dernière mise à jour : Janvier 2025 — TEKNON x GIVE1PROJECT
-  </p>
-  <p style="max-width:720px;margin:20px auto 0;font-size:14px;opacity:0.75;">
-    Conformément aux dispositions de la loi n°2008-08 du 25 janvier 2008 sur les transactions électroniques et de la loi n°2008-12 du 25 janvier 2008 sur la protection des données personnelles en République du Sénégal, il est porté à la connaissance des utilisateurs du site web <strong>www.sununatt.sn</strong> les informations suivantes :
-  </p>
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Légal</div>
+    <h1>Mentions légales</h1>
+    <p>Informations relatives à l'éditeur, à l'hébergement et à la protection des données personnelles.</p>
+    <p class="hero-date">Dernière mise à jour : juillet 2026, TEKNON x GIVE1PROJECT</p>
+    <p class="hero-intro">
+      Conformément à la loi n°2008-08 du 25 janvier 2008 sur les transactions électroniques et à la loi n°2008-12 du 25 janvier 2008 sur la protection des données personnelles en République du Sénégal, les utilisateurs du site <strong>www.sununatt.sn</strong> sont informés des éléments suivants :
+    </p>
+  </div>
 </section>
 
-<div style="max-width:900px;margin:0 auto;padding:40px 24px 80px;">
+<div class="legal-content">
 
   <!-- Article 1 — Éditeur -->
-  <div class="section-card" id="editeur">
+  <div class="section-card is-animating" id="editeur">
     <div class="section-header">
       <div>
         <div class="section-num">Article 1</div>
         <div class="section-title">Éditeur du site</div>
       </div>
     </div>
-    <p>Le site web <strong>www.sununatt.sn</strong> est édité par la société <strong>SUARL</strong>, en partenariat avec <strong>GIVE1PROJECT</strong>. SUNUNATT est une application fintech qui digitalise les tontines traditionnelles en Afrique de l'Ouest.</p>
+    <p>Le site <strong>www.sununatt.sn</strong> est édité par la société <strong>SUARL</strong>, en partenariat avec <strong>GIVE1PROJECT</strong>. SUNUNATT est une application de tontine numérique pour l'Afrique de l'Ouest.</p>
     <div class="info-grid">
       <div class="info-item"><div class="info-label">Société éditrice</div><div class="info-value">SUARL</div></div>
       <div class="info-item"><div class="info-label">Partenaire</div><div class="info-value">GIVE1PROJECT</div></div>
@@ -45,19 +44,19 @@
   </div>
 
   <!-- Article 2 — Hébergement -->
-  <div class="section-card" id="hebergement">
+  <div class="section-card is-animating" id="hebergement">
     <div class="section-header">
       <div>
         <div class="section-num">Article 2</div>
         <div class="section-title">Hébergement</div>
       </div>
     </div>
-    <p>Le site <strong>www.sununatt.sn</strong> et l'application web SUNUNATT sont hébergés par la société <strong>Vercel Inc.</strong>, plateforme cloud spécialisée dans le déploiement d'applications web modernes.</p>
+    <p>Le site <strong>www.sununatt.sn</strong> et l'application SUNUNATT sont hébergés par <strong>Hostinger International Ltd.</strong>, prestataire d'hébergement web.</p>
     <div class="info-grid">
-      <div class="info-item"><div class="info-label">Hébergeur</div><div class="info-value">Vercel Inc.</div></div>
-      <div class="info-item"><div class="info-label">Site de l'hébergeur</div><div class="info-value"><a href="https://vercel.com" target="_blank" rel="noopener">vercel.com</a></div></div>
-      <div class="info-item"><div class="info-label">Base de données</div><div class="info-value">Supabase Inc.</div></div>
-      <div class="info-item"><div class="info-label">Adresse Supabase</div><div class="info-value">970 Toa Payoh North #07-04, Singapour 318992</div></div>
+      <div class="info-item"><div class="info-label">Hébergeur</div><div class="info-value">Hostinger International Ltd.</div></div>
+      <div class="info-item"><div class="info-label">Site de l'hébergeur</div><div class="info-value"><a href="https://www.hostinger.com" target="_blank" rel="noopener">hostinger.com</a></div></div>
+      <div class="info-item"><div class="info-label">Base de données</div><div class="info-value">MySQL</div></div>
+      <div class="info-item"><div class="info-label">Adresse de l'hébergeur</div><div class="info-value">61 Lordou Vironos Street, Lumiel Building, 4<sup>e</sup> étage, 6023 Larnaca, Chypre</div></div>
     </div>
     <p>SUNUNATT est également disponible sous forme d'application mobile sur Google Play Store, pour les appareils Android.</p>
     <div class="info-grid">
@@ -71,14 +70,14 @@
   </div>
 
   <!-- Article 3 — Propriété intellectuelle -->
-  <div class="section-card" id="propriete">
+  <div class="section-card is-animating" id="propriete">
     <div class="section-header">
       <div>
         <div class="section-num">Article 3</div>
         <div class="section-title">Propriété intellectuelle</div>
       </div>
     </div>
-    <p>L'ensemble des éléments constituant le site <strong>www.sununatt.sn</strong> — à savoir les textes, graphismes, logo, icônes, images, photographies, sons, vidéos, logiciels, bases de données et structure — sont la propriété exclusive de <strong>TEKNON</strong> et sont protégés par les lois sénégalaises et internationales relatives à la propriété intellectuelle.</p>
+    <p>L'ensemble des éléments constituant le site <strong>www.sununatt.sn</strong>, à savoir les textes, graphismes, logo, icônes, images, photographies, sons, vidéos, logiciels, bases de données et structure, sont la propriété exclusive de <strong>TEKNON</strong> et sont protégés par les lois sénégalaises et internationales relatives à la propriété intellectuelle.</p>
     <p>Toute reproduction, représentation, modification, publication, adaptation, totale ou partielle des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite sans autorisation écrite préalable de TEKNON.</p>
     <div class="gold-box">
       <p>Toute utilisation non autorisée du logo, de la marque SUNUNATT ou de tout contenu protégé est passible de poursuites judiciaires conformément aux dispositions du droit sénégalais applicable.</p>
@@ -86,7 +85,7 @@
   </div>
 
   <!-- Article 4 — Protection des données -->
-  <div class="section-card" id="donnees">
+  <div class="section-card is-animating" id="donnees">
     <div class="section-header">
       <div>
         <div class="section-num">Article 4</div>
@@ -106,7 +105,7 @@
       <tbody>
         <tr><td>Nom, prénom, numéro de téléphone</td><td>Création de compte et identification (KYC)</td><td>Durée de la relation contractuelle</td></tr>
         <tr><td>Adresse email</td><td>Communication, notifications, récupération de compte</td><td>Durée de la relation contractuelle</td></tr>
-        <tr><td>Données de paiement Mobile Money</td><td>Exécution des transactions (Wave, Orange, Free Money)</td><td>Conformément aux obligations légales</td></tr>
+        <tr><td>Données de paiement Mobile Money</td><td>Exécution des transactions (Wave, Orange Money)</td><td>Conformément aux obligations légales</td></tr>
         <tr><td>Historique des tontines et cotisations</td><td>Traçabilité, transparence, résolution des litiges</td><td>Durée de la relation</td></tr>
         <tr><td>Données de navigation (cookies analytics)</td><td>Amélioration du service, statistiques</td><td>13 mois maximum</td></tr>
       </tbody>
@@ -123,12 +122,12 @@
       </tbody>
     </table>
     <div class="highlight-box">
-      <p>Pour exercer vos droits ou pour toute question relative à vos données personnelles, contactez notre Délégué à la Protection des Données (DPO) à l'adresse : <a href="mailto:contact@teknon.sn" style="color:var(--blue);">contact@teknon.sn</a>. TEKNON s'engage à répondre dans un délai de <strong>30 jours ouvrables</strong>.</p>
+      <p>Pour exercer vos droits ou pour toute question relative à vos données personnelles, contactez notre Délégué à la Protection des Données (DPO) à l'adresse : <a href="mailto:contact@teknon.sn">contact@teknon.sn</a>. TEKNON s'engage à répondre dans un délai de <strong>30 jours ouvrables</strong>.</p>
     </div>
   </div>
 
   <!-- Article 5 — Limitation de responsabilité -->
-  <div class="section-card" id="responsabilite">
+  <div class="section-card is-animating" id="responsabilite">
     <div class="section-header">
       <div>
         <div class="section-num">Article 5</div>
@@ -140,7 +139,7 @@
       <li>Des interruptions temporaires du service pour des raisons de maintenance technique ou d'incidents techniques indépendants de sa volonté</li>
       <li>De l'utilisation frauduleuse par un tiers des informations de connexion d'un utilisateur</li>
       <li>Des dommages directs ou indirects liés à l'utilisation ou à l'impossibilité d'utiliser le site</li>
-      <li>Des dysfonctionnements des opérateurs de téléphonie mobile ou des plateformes de Mobile Money (Wave, Orange Money, Free Money)</li>
+      <li>Des dysfonctionnements des opérateurs de téléphonie mobile ou des plateformes de Mobile Money (Wave, Orange Money)</li>
       <li>Des contenus publiés par des tiers ou accessibles via des liens hypertextes présents sur le site</li>
     </ul>
     <div class="gold-box">
@@ -149,20 +148,20 @@
   </div>
 
   <!-- Article 6 — Liens hypertextes -->
-  <div class="section-card" id="liens">
+  <div class="section-card is-animating" id="liens">
     <div class="section-header">
       <div>
         <div class="section-num">Article 6</div>
         <div class="section-title">Liens hypertextes</div>
       </div>
     </div>
-    <p>Le site <strong>www.sununatt.sn</strong> peut contenir des liens vers des sites tiers, notamment vers les plateformes de nos partenaires (Google Play Store, Wave, Orange Money, Free Money). Ces liens sont fournis à titre informatif uniquement.</p>
+    <p>Le site <strong>www.sununatt.sn</strong> peut contenir des liens vers des sites tiers, notamment vers les plateformes de nos partenaires (Google Play Store, Wave, Orange Money). Ces liens sont fournis à titre informatif uniquement.</p>
     <p>TEKNON n'exerce aucun contrôle sur le contenu de ces sites externes et ne peut être tenu responsable de leur contenu, de leur politique de confidentialité, ni de tout préjudice pouvant résulter de leur consultation.</p>
     <p>Tout lien hypertexte vers le site <strong>www.sununatt.sn</strong> depuis un site tiers est soumis à l'autorisation préalable et écrite de TEKNON. Pour toute demande, contactez <a href="mailto:contact@teknon.sn">contact@teknon.sn</a>.</p>
   </div>
 
   <!-- Article 7 — Droit applicable -->
-  <div class="section-card" id="droit">
+  <div class="section-card is-animating" id="droit">
     <div class="section-header">
       <div>
         <div class="section-num">Article 7</div>
@@ -173,7 +172,7 @@
   </div>
 
   <!-- Article 8 — Contact -->
-  <div class="section-card" id="contact-legal">
+  <div class="section-card is-animating" id="contact-legal">
     <div class="section-header">
       <div>
         <div class="section-num">Article 8</div>

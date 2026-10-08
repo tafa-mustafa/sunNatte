@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Notifications\Notification;
+use App\Mail\NotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -17,8 +18,13 @@ class NotificationDispatcher
 
     public function send(User $user, string $event, string $message, ?Notification $notification = null): void
     {
-        if ($notification && $this->prefs->allows($user, $event, 'push')) {
-            $user->notify($notification);
+        if ($this->prefs->allows($user, $event, 'push')) {
+            if ($notification) {
+                $user->notify($notification);
+            }
+            if ($user->fcm_token) {
+                app(FCMService::class)->send($user->fcm_token, $this->subject($event), $message);
+            }
         }
 
         if ($this->prefs->allows($user, $event, 'sms') && $user->phone) {
@@ -27,9 +33,7 @@ class NotificationDispatcher
 
         if ($this->prefs->allows($user, $event, 'email') && $user->email) {
             try {
-                Mail::raw($message, function ($mail) use ($user, $event) {
-                    $mail->to($user->email)->subject($this->subject($event));
-                });
+                Mail::to($user->email)->send(new NotificationMail($this->subject($event), $message));
             } catch (\Throwable $e) {
                 Log::warning('Email notif échoué : '.$e->getMessage());
             }

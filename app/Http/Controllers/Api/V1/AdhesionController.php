@@ -210,9 +210,12 @@ class AdhesionController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
+        $fresh = $adhesion->fresh(['tontine', 'user']) ?? $adhesion;
+        event(new \App\Events\AdhesionUpdated($fresh));
+
         return response()->json([
             'message' => $request->action === 'approve' ? 'Demande approuvée.' : 'Demande rejetée.',
-            'adhesion' => $this->adhesions->payload($adhesion->fresh()),
+            'adhesion' => $this->adhesions->payload($fresh),
         ]);
     }
 

@@ -163,7 +163,10 @@ class PaymentService
             $dispatcher->send($owner, 'cotisation_recue', $received->toArray($owner)['message'], $received);
         }
 
-        return $contribution->fresh(['tontine', 'user']);
+        $settled = $contribution->fresh(['tontine', 'user']);
+        event(new \App\Events\ContributionSettled($settled));
+
+        return $settled;
     }
 
     public function storeReceipt(Contribution $contribution): string

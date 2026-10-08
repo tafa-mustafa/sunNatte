@@ -5,27 +5,36 @@
 @section('og_title', 'Rejoins ma tontine '.$tontine->nom)
 
 @section('content')
-<section class="hero-about">
+<section class="page-hero">
   <div class="container">
+    <div class="eyebrow">Invitation</div>
     <h1>{{ $tontine->nom }}</h1>
     <p>Vous avez été invité à rejoindre cette tontine sur SUNUNATT.</p>
   </div>
 </section>
 
-<section class="page-contact">
+<section>
   <div class="container">
-    <div class="contact-form reveal">
+    <div class="join-card reveal">
       <h3>Code d'accès</h3>
-      <p style="font-size:2rem;font-weight:800;letter-spacing:.2em;margin:1rem 0;">{{ $code }}</p>
+      <div class="join-code" id="joinCode">{{ $code }}</div>
+      <button type="button" class="btn btn-text join-copy" data-copy="{{ $code }}">Copier le code</button>
       @if($tontine->description)
-        <p>{{ $tontine->description }}</p>
+        <p class="desc">{{ $tontine->description }}</p>
       @endif
-      <p>Téléchargez l'application, inscrivez-vous, puis saisissez ce code sur l'accueil.</p>
-      <p>
-        <a href="{{ config('tontine.play_store') }}" class="btn btn-primary" rel="noopener noreferrer">
+      <div class="join-steps">
+        <div><b>1</b> Téléchargez l'application SUNUNATT</div>
+        <div><b>2</b> Créez votre compte avec votre numéro</div>
+        <div><b>3</b> Saisissez ce code sur l'accueil, le créateur valide votre demande</div>
+      </div>
+      <div class="join-actions">
+        <a href="{{ $share['intent'] ?? config('tontine.play_store') }}" class="btn btn-primary btn-lg" rel="noopener noreferrer">
+          Ouvrir dans l'app
+        </a>
+        <a href="{{ config('tontine.play_store') }}" class="btn btn-outline btn-lg" rel="noopener noreferrer">
           Télécharger l'app
         </a>
-      </p>
+      </div>
     </div>
   </div>
 </section>

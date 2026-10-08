@@ -38,5 +38,15 @@ return [
     'from' => env('TWILIO_NUMBER'),
 ],
 
+'sms' => [
+    'driver' => env('SMS_DRIVER', 'twilio'),
+],
+
+'africastalking' => [
+    'username' => env('AT_USERNAME'),
+    'api_key' => env('AT_API_KEY'),
+    'from' => env('AT_FROM'),
+],
+
 
 ];

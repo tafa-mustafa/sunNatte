@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\DemandeValidatedNotification;
+use App\Services\AdminAuthService;
+use App\Services\AdminDashboardService;
+use App\Services\ProfileCompletenessService;
+use App\Models\Mutuelle;
 
 class AdminController extends Controller
 {
@@ -78,7 +82,13 @@ class AdminController extends Controller
     {
         $this->checkIsAdmin();
 
-        return response()->json($user);
+        $user->load('documents');
+
+        return response()->json([
+            'user' => $user,
+            'completeness' => app(ProfileCompletenessService::class)
+                ->inspect($user, $user->documents->count()),
+        ]);
     }
 
     /**
@@ -169,9 +179,10 @@ class AdminController extends Controller
         $this->checkIsAdmin();
 
         try {
-            $tontines = Tontine::whereHas('users', function ($query) {
-                $query->where('adhesions.badge', 'systems');
-            })->where('statut', 1)->get();
+            $tontines = Tontine::withCount([
+                'adhesions as pending_count' => fn ($q) => $q->where('statut', 'pending'),
+                'adhesions as approved_count' => fn ($q) => $q->where('statut', 'approved'),
+            ])->latest()->get();
 
             return response()->json($tontines);
         } catch (\Exception $e) {
@@ -230,7 +241,7 @@ class AdminController extends Controller
 
         try {
             $tontine->update($request->only([
-                'nom', 'nombre_personne', 'type', 'duree',
+                'nom', 'nombre_personne', 'type', 'visibilite', 'duree',
                 'montant', 'tirage', 'materiel_id', 'description'
             ]));
 
@@ -256,26 +267,84 @@ class AdminController extends Controller
 
 
 
-    public function login_user(Request $request)
+    public function test()
     {
+        return response()->json(['ok' => true, 'service' => 'admin']);
+    }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            Helper::sendError('email ou password invalide');
+    public function show_tontine(Tontine $tontine)
+    {
+        $this->checkIsAdmin();
 
+        $tontine->load(['users' => function ($q) {
+            $q->withPivot('badge', 'statut');
+        }]);
+
+        return response()->json($tontine);
+    }
+
+    public function active_tontine(Tontine $tontine)
+    {
+        return $this->toggle_tontine_status($tontine, 1);
+    }
+
+    public function desactive_tontine(Tontine $tontine)
+    {
+        return $this->toggle_tontine_status($tontine, 0);
+    }
+
+    public function list_documents(User $user)
+    {
+        $this->checkIsAdmin();
+
+        return response()->json($user->documents()->latest()->get());
+    }
+
+    public function dashboard(AdminDashboardService $dashboard)
+    {
+        $this->checkIsAdmin();
+
+        return response()->json($dashboard->stats());
+    }
+
+    public function list_mutuelles()
+    {
+        $this->checkIsAdmin();
+
+        return response()->json(
+            Mutuelle::with('createur:id,nom,prenom,phone')->latest()->get()
+        );
+    }
+
+    public function login_user(Request $request, AdminAuthService $auth)
+    {
+        $request->validate([
+            'password' => 'required|string',
+            'login' => 'required_without_all:email,phone|nullable|string',
+            'email' => 'required_without_all:login,phone|nullable|string',
+            'phone' => 'required_without_all:login,email|nullable|string',
+        ]);
+
+        $credentials = $auth->credentials($request);
+        if (! Auth::attempt($credentials)) {
+            Helper::sendError('Identifiants invalides.');
         }
 
         $user = Auth::user();
+        if ((int) $user->role_id !== User::ROLE_ADMIN) {
+            Auth::logout();
+            Helper::sendError('Accès réservé aux administrateurs.', [], 403);
+        }
 
-
-
-
-        $success['token'] = $user->createToken('sunuNatte_app')->plainTextToken;
-        $success['id'] = $user->id;
-        $success['nom'] = $user->nom;
-        $success['email'] = $user->email;
-        return response()->json($success);
-
-
+        return response()->json([
+            'token' => $user->createToken('sunuNatte_admin')->plainTextToken,
+            'id' => $user->id,
+            'nom' => $user->nom,
+            'prenom' => $user->prenom,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'role_id' => $user->role_id,
+        ]);
     }
 
     public function adherer_user(Request $request, Tontine $tontine)

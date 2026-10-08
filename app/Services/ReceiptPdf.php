@@ -23,19 +23,37 @@ class ReceiptPdf
 
     public function renderLines(array $lines): string
     {
-
-        $content = "BT /F1 14 Tf 50 780 Td\n";
-        foreach ($lines as $i => $line) {
-            $escaped = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $this->ascii($line));
-            $content .= $i === 0 ? "({$escaped}) Tj\n" : "0 -20 Td ({$escaped}) Tj\n";
+        $chunks = array_chunk($lines, 36) ?: [[]];
+        $streams = [];
+        foreach ($chunks as $chunk) {
+            $content = "BT /F1 12 Tf 50 800 Td\n";
+            foreach ($chunk as $i => $line) {
+                $escaped = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $this->ascii((string) $line));
+                $content .= $i === 0 ? "({$escaped}) Tj\n" : "0 -20 Td ({$escaped}) Tj\n";
+            }
+            $content .= "ET\n";
+            $streams[] = $content;
         }
-        $content .= "ET\n";
+
+        $n = count($streams);
+        $pageIds = [];
+        for ($i = 0; $i < $n; $i++) {
+            $pageIds[] = 3 + $i;
+        }
+        $contentStart = 3 + $n;
+        $fontId = $contentStart + $n;
+        $kids = implode(' ', array_map(fn ($id) => $id.' 0 R', $pageIds));
 
         $objects = [];
         $objects[] = '<< /Type /Catalog /Pages 2 0 R >>';
-        $objects[] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
-        $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>';
-        $objects[] = '<< /Length '.strlen($content).' >> stream'."\n".$content.'endstream';
+        $objects[] = '<< /Type /Pages /Kids ['.$kids.'] /Count '.$n.' >>';
+        foreach ($pageIds as $i => $pageId) {
+            $cid = $contentStart + $i;
+            $objects[] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents '.$cid.' 0 R /Resources << /Font << /F1 '.$fontId.' 0 R >> >> >>';
+        }
+        foreach ($streams as $stream) {
+            $objects[] = '<< /Length '.strlen($stream).' >> stream'."\n".$stream.'endstream';
+        }
         $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
 
         $pdf = "%PDF-1.4\n";

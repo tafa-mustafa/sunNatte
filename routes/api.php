@@ -2,11 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\LedgerController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\MutuelleController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\RealtimeController;
 use App\Http\Controllers\Api\V1\TontineInviteController;
 use App\Http\Controllers\Api\V1\AdhesionController;
 use App\Http\Controllers\Api\V1\DocumentController;
@@ -34,10 +36,7 @@ Route::get('admin/test', [AdminController::class, 'test']);
 Route::get('tontine/contribution/error', [ContributionController::class, 'error'])->name('payment.error');
  */
     Route::get('admin/tarifs', [TarifController::class, 'index']);
-    Route::post('admin/tarifs', [TarifController::class, 'store']);
-    Route::get('admin/tarifs/{tarif}', [TarifController::class, 'show']);
-    Route::put('admin/tarifs/{tarif}', [TarifController::class, 'update']);
-    Route::delete('admin/tarifs/{tarif}', [TarifController::class, 'destroy']);
+Route::get('admin/tarifs/{tarif}', [TarifController::class, 'show']);
 
 
 Route::post('/users/login', [LoginController::class, 'login']);
@@ -54,7 +53,9 @@ Route::post('/users/logout', [UserController::class, 'logout']);
 Route::post('/users/update/password', [UserController::class, 'update_pass']);
 Route::post('/users/update/profile/{user}', [UserController::class, 'update']);
 Route::get('/home', HomeController::class);
+Route::get('/realtime/config', RealtimeController::class);
 Route::get('/users/profile', [UserController::class, 'moi']);
+Route::post('/users/fcm-token', [UserController::class, 'fcmToken']);
 Route::get('/profile/completeness', [UserController::class, 'completeness']);
 Route::get('/users/{user}', [UserController::class, 'show']);
 Route::post('/users/add', [UserController::class, 'store']);
@@ -70,8 +71,6 @@ Route::get('/adhesions/mine', [AdhesionController::class, 'mine']);
 Route::get('/adhesions/pending', [AdhesionController::class, 'pending']);
 Route::patch('/adhesions/{adhesion}', [AdhesionController::class, 'update']);
 Route::post('/adhesions/{adhesion}/review', [AdhesionController::class, 'review']);
-Route::get('/admin/adhesions/pending', [AdhesionController::class, 'pending']);
-Route::post('/admin/adhesions/{adhesion}/review', [AdhesionController::class, 'review']);
 Route::get('tontine/{tontine}/detail', [TontineController::class, 'show']);
 Route::get('tontine/{tontine}/tirage', [TontineController::class, 'tirage']);
 Route::get('tontine/{tontine}/listeVersements', [TontineController::class, 'listeVersements']);
@@ -102,6 +101,11 @@ Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
 Route::get('/receipts/{contribution}', [PaymentController::class, 'receipt']);
 Route::get('/ledger', [LedgerController::class, 'index']);
 Route::get('/ledger/export.pdf', [LedgerController::class, 'export']);
+Route::get('/ledger/export.xlsx', [ExportController::class, 'ledgerXlsx']);
+Route::get('/tontines/{tontine}/export.xlsx', [ExportController::class, 'tontineXlsx']);
+Route::get('/tontines/{tontine}/assemblee.pdf', [ExportController::class, 'tontineAssemblee']);
+Route::get('/mutuelles/template.xlsx', [ExportController::class, 'mutuelleTemplate']);
+Route::get('/mutuelles/{mutuelle}/export.xlsx', [ExportController::class, 'mutuelleXlsx']);
 Route::get('/notifications/preferences', [NotificationPreferenceController::class, 'index']);
 Route::put('/notifications/preferences', [NotificationPreferenceController::class, 'update']);
 
@@ -132,31 +136,38 @@ Route::post('/tirelires/{tirelire}/retraits', [TirelireController::class, 'retra
 
 
 
-    /*************************Admin Route *****************/
+Route::post('admin/tontine/adhesion/{tontine}', [UserController::class, 'demande']);
 
-Route::post('admin/tontines/create', [AdminController::class,'store_tontine']);
-Route::get('admin/tontines/all', [AdminController::class,'list_tontine']);
-Route::get('admin/tontines/show/{tontine}', [AdminController::class,'show_tontine']);
-Route::get('admin/tontines/open/{tontine}', [AdminController::class,'active_tontine']);
-Route::post('admin/tontines/update/{tontine}', [AdminController::class,'update_tontine']);
-Route::get('admin/tontines/close/{tontine}', [AdminController::class,'desactive_tontine']);
-Route::get('admin/users/all', [AdminController::class,'list_users']);
-Route::get('admin/users/show/{user}', [AdminController::class,'show_user']);
-Route::get('admin/users/active/{id}', [AdminController::class,'active_user']);
-Route::get('admin/users/documents/{user}', [AdminController::class,'list_documents']);
-Route::get('admin/users/desactive/{id}', [AdminController::class,'desactive_user']);
-Route::post('admin/users/update/{user}', [AdminController::class,'update_user']);
-Route::delete('admin/users/delete/{user}', [AdminController::class,'delete_user']);
-Route::post('admin/tontine/adhesion/{tontine}', [UserController::class,'demande']);
-Route::post('admin/tontine/adhere_user/{tontine}', [AdminController::class,'adherer_user']);
-
-    Route::post('admin/users', [AdminController::class, 'store']);                 // Créer un utilisateur
-    Route::get('admin/users', [AdminController::class, 'list_users']);             // Lister les utilisateurs
-    Route::get('admin/users/{user}', [AdminController::class, 'show_user']);       // Voir un utilisateur
-    Route::put('admin/users/{user}', [AdminController::class, 'update_user']);     // Modifier un utilisateur
-    Route::delete('admin/users/{user}', [AdminController::class, 'delete_user']);  // Supprimer un utilisateur
-    Route::patch('admin/users/{id}/activate', [AdminController::class, 'active_user']);    // Activer un utilisateur
-    Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']); // Désactiver un utilisateur
+Route::middleware('admin')->group(function () {
+    Route::get('/admin/adhesions/pending', [AdhesionController::class, 'pending']);
+    Route::post('/admin/adhesions/{adhesion}/review', [AdhesionController::class, 'review']);
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
+    Route::get('/admin/mutuelles', [AdminController::class, 'list_mutuelles']);
+    Route::post('admin/tarifs', [TarifController::class, 'store']);
+    Route::put('admin/tarifs/{tarif}', [TarifController::class, 'update']);
+    Route::delete('admin/tarifs/{tarif}', [TarifController::class, 'destroy']);
+    Route::post('admin/tontines/create', [AdminController::class, 'store_tontine']);
+    Route::get('admin/tontines/all', [AdminController::class, 'list_tontine']);
+    Route::get('admin/tontines/show/{tontine}', [AdminController::class, 'show_tontine']);
+    Route::get('admin/tontines/open/{tontine}', [AdminController::class, 'active_tontine']);
+    Route::post('admin/tontines/update/{tontine}', [AdminController::class, 'update_tontine']);
+    Route::get('admin/tontines/close/{tontine}', [AdminController::class, 'desactive_tontine']);
+    Route::get('admin/users/all', [AdminController::class, 'list_users']);
+    Route::get('admin/users/show/{user}', [AdminController::class, 'show_user']);
+    Route::get('admin/users/active/{id}', [AdminController::class, 'active_user']);
+    Route::get('admin/users/documents/{user}', [AdminController::class, 'list_documents']);
+    Route::get('admin/users/desactive/{id}', [AdminController::class, 'desactive_user']);
+    Route::post('admin/users/update/{user}', [AdminController::class, 'update_user']);
+    Route::delete('admin/users/delete/{user}', [AdminController::class, 'delete_user']);
+    Route::post('admin/tontine/adhere_user/{tontine}', [AdminController::class, 'adherer_user']);
+    Route::post('admin/users', [AdminController::class, 'store']);
+    Route::get('admin/users', [AdminController::class, 'list_users']);
+    Route::get('admin/users/{user}', [AdminController::class, 'show_user']);
+    Route::put('admin/users/{user}', [AdminController::class, 'update_user']);
+    Route::delete('admin/users/{user}', [AdminController::class, 'delete_user']);
+    Route::patch('admin/users/{id}/activate', [AdminController::class, 'active_user']);
+    Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']);
+});
 
 
 /**********************NOTIFICATION */

@@ -52,10 +52,19 @@ class LedgerService
     public function pdf(array $rows): string
     {
         $lines = ['SUNU NATT', 'Tableau de suivi', now()->format('d/m/Y'), ''];
-        foreach (array_slice($rows, 0, 32) as $row) {
+        foreach ($rows as $row) {
             $lines[] = $this->formatLine($row);
         }
 
         return app(ReceiptPdf::class)->renderLines($lines);
+    }
+
+    public function xlsx(array $rows): string
+    {
+        return app(SpreadsheetXlsx::class)->build(
+            ['date', 'tontine', 'membre', 'montant', 'statut', 'provider'],
+            $rows,
+            'Suivi'
+        );
     }
 }

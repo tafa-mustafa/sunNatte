@@ -180,4 +180,15 @@ class UserController extends Controller
 
         return app(AdhesionController::class)->store($request);
     }
+
+    public function fcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string|max:512',
+        ]);
+
+        $request->user()->update(['fcm_token' => $request->fcm_token]);
+
+        return response()->json(['message' => 'Token push enregistré.']);
+    }
 }
