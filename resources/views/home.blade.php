@@ -152,7 +152,7 @@
       <div class="card reveal">
         <div class="card-icon-wrap"><i class="fas fa-piggy-bank card-icon"></i></div>
         <h4>Tirelire digitale</h4>
-        <p>Épargnez avec un objectif et une échéance. Retrait anticipé possible avec une pénalité de 5 %, affichée avant confirmation.</p>
+        <p>Épargnez avec un objectif et une échéance. Retrait anticipé possible avec une pénalité de 10 %, affichée avant confirmation.</p>
       </div>
       <div class="card reveal">
         <div class="card-icon-wrap"><i class="fas fa-hand-holding-heart card-icon"></i></div>

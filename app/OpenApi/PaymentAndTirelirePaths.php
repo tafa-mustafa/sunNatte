@@ -88,7 +88,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/tirelires/{tirelire}/retrait/preview',
     tags: ['Tirelire'],
-    summary: 'Simulation retrait (échéance vs pénalité 5 %)',
+    summary: 'Simulation retrait (échéance vs pénalité 10 %)',
     security: [['sanctum' => []]],
     parameters: [new OA\Parameter(name: 'tirelire', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
     responses: [new OA\Response(response: 200, description: 'Quote')]

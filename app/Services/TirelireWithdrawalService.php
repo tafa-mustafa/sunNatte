@@ -17,7 +17,7 @@ class TirelireWithdrawalService
     {
         return $this->isMature($tirelire)
             ? (float) config('tirelire.maturity_fee_rate', 0.015)
-            : (float) config('tirelire.early_penalty_rate', 0.05);
+            : (float) config('tirelire.early_penalty_rate', 0.10);
     }
 
     public function quote(Tirelire $tirelire, float $montant): array

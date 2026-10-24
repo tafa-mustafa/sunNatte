@@ -258,7 +258,7 @@ public function previewRetrait(Request $request, Tirelire $tirelire)
         'quote' => $this->withdrawals->quote($tirelire, $montant),
         'message' => $this->withdrawals->isMature($tirelire)
             ? 'Retrait à l\'échéance : frais de 1,5 %.'
-            : 'Retrait anticipé : pénalité de 5 %. Confirmez avec accept_penalty=true.',
+            : 'Retrait anticipé : pénalité de 10 %. Confirmez avec accept_penalty=true.',
     ]);
 }
 

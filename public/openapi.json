@@ -1,0 +1,3619 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Sunu Natt API",
+        "description": "API Laravel Sanctum. Token via POST /users/login puis Authorize. Tontine privee = code + review proprio. Catalogue = filtre + review admin. Orange Money = 501. Page invitation hors API : GET /join/{code}.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Préfixe /api"
+        }
+    ],
+    "paths": {
+        "/admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Statistiques back-office",
+                "operationId": "85ef4f2f0529aa2e770b54ffef114245",
+                "responses": {
+                    "200": {
+                        "description": "Compteurs"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/mutuelles": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Lister les mutuelles",
+                "operationId": "a49dd8a4a18179f626e0a989d1408209",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/test": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Ping admin",
+                "operationId": "b77585489901d2b5a79cccd785d930dc",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/admin/tarifs": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Lister les tarifs",
+                "operationId": "4f12edbd9b5a9cdad6fa97b2e7c81f9e",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Créer un tarif",
+                "operationId": "f35c54f5640a4b962261d25b1e0168f1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "pourcentage"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cotisation",
+                                            "retrait"
+                                        ]
+                                    },
+                                    "min": {
+                                        "type": "number",
+                                        "nullable": true
+                                    },
+                                    "max": {
+                                        "type": "number",
+                                        "nullable": true
+                                    },
+                                    "pourcentage": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                }
+            }
+        },
+        "/admin/tarifs/{tarif}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Voir un tarif",
+                "operationId": "4b3eb0c04b69643b26654d6f1874e466",
+                "parameters": [
+                    {
+                        "name": "tarif",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tarif"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Modifier un tarif",
+                "operationId": "5cab91838d7750313e4c4c699df774aa",
+                "parameters": [
+                    {
+                        "name": "tarif",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "min": {
+                                        "type": "number"
+                                    },
+                                    "max": {
+                                        "type": "number"
+                                    },
+                                    "pourcentage": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Supprimer un tarif",
+                "operationId": "f31ef656b3f29f8df6a6cc25bc8b9568",
+                "parameters": [
+                    {
+                        "name": "tarif",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                }
+            }
+        },
+        "/admin/tontines/show/{tontine}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Détail tontine (admin)",
+                "operationId": "f8128afba6c2c263fdaff11036cd3b62",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontines/open/{tontine}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Ouvrir / activer une tontine",
+                "operationId": "b2b5ab7f732348d60fe1f4de9b973fae",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontines/close/{tontine}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Fermer une tontine",
+                "operationId": "42fc977844c0058c04026baae74559ef",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fermée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontines/update/{tontine}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Modifier une tontine",
+                "operationId": "6d6e5a98d37ec5b144c6589a354e3a11",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/all": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Lister les utilisateurs (alias)",
+                "operationId": "c9738bf5267c347fd4a05c1a560a8c0a",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Lister les utilisateurs",
+                "operationId": "7c6f1a1f052208c550a5ddfaf6bb45c1",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Créer un utilisateur",
+                "operationId": "dd547effbd72c5907ee8192dfd602166",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/show/{user}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Voir un utilisateur (alias)",
+                "operationId": "cf35249d6422d5b891e381a9589df337",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/{user}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Voir un utilisateur",
+                "operationId": "300a54a95c49bcf0b4181980fc0a5048",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Modifier un utilisateur",
+                "operationId": "ab7645cbd2daf2f5b44288b5f7fd403f",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Supprimer un utilisateur",
+                "operationId": "5be512bbed6dfd58417557575b3a2e45",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/documents/{user}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Documents KYC d un utilisateur",
+                "operationId": "6457cfa7edfa129ff1054df4e8ccd8e4",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documents"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/update/{user}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Modifier un utilisateur (alias POST)",
+                "operationId": "4c18f208109b5be2f4d130db71868f21",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/delete/{user}": {
+            "delete": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Supprimer un utilisateur (alias)",
+                "operationId": "b0bea3a8747a985fa196565bd6185afd",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/active/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activer un utilisateur (alias GET)",
+                "operationId": "4cbead4942b1e64ffda7f1944e5de3b6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/desactive/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Désactiver un utilisateur (alias GET)",
+                "operationId": "45b3983922a97b1199b5644324a483d6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Désactivé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activer un utilisateur",
+                "operationId": "3d594d0c1403af7dc50372cf3a8c8ac4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/{id}/deactivate": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Désactiver un utilisateur",
+                "operationId": "ca7b920a68702db74cc249d7989ad403",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Désactivé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontine/adhesion/{tontine}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Déposer une adhésion catalogue (alias POST /adhesions)",
+                "operationId": "e1f184b7932e4de7bcede9f1e5d074af",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Demande pending"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontine/adhere_user/{tontine}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Approuver l adhésion d un user_id",
+                "operationId": "7cb208fd5d6ce2cb4fb582fdeeca6a8e",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Approuvée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Inscription",
+                "operationId": "12e69b634b5a8e337d89f41848216c0c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom",
+                                    "prenom",
+                                    "phone",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    },
+                                    "prenom": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "771234567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Inscrit"
+                    },
+                    "400": {
+                        "description": "Validation"
+                    }
+                }
+            }
+        },
+        "/users/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Connexion téléphone / mot de passe",
+                "operationId": "c1328302f84a9ea880f49a76298bde96",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "771234567"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token Sanctum",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenUser"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides"
+                    }
+                }
+            }
+        },
+        "/mobile/sendCode": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Envoyer un OTP SMS",
+                "operationId": "0048f5e10c80d8aa32f882bffcedde0a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code envoyé"
+                    }
+                }
+            }
+        },
+        "/mobile/verify": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Vérifier l’OTP",
+                "operationId": "1a854405f7860709ad508cff0d4be886",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "1234"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "422": {
+                        "description": "Code invalide"
+                    }
+                }
+            }
+        },
+        "/users/send-otp": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "OTP mot de passe oublié",
+                "operationId": "b49b2235e3fc07ee5b8192d860cd86fc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code envoyé"
+                    }
+                }
+            }
+        },
+        "/users/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Réinitialiser le mot de passe",
+                "operationId": "1d664a85ef1dd53120182dd2e56ea5c4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "code",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe mis à jour"
+                    }
+                }
+            }
+        },
+        "/admin/login": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Connexion admin (e-mail ou téléphone, role_id=1)",
+                "operationId": "c9d4e3c623c34f166f7892a7af9b5598",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "login": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token admin"
+                    }
+                }
+            }
+        },
+        "/users/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Déconnexion",
+                "operationId": "10fd197652ce65445f40f115967b59b1",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/home": {
+            "get": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Accueil (CTA, compteurs, KYC)",
+                "operationId": "7e05ae435a375ed96f1e73bf785ade39",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/realtime/config": {
+            "get": {
+                "tags": [
+                    "Temps réel"
+                ],
+                "summary": "Config Echo / Pusher (driver, auth, canaux, events)",
+                "operationId": "a875de79b72817a9418e1e251a5ec5d2",
+                "responses": {
+                    "200": {
+                        "description": "driver, auth_endpoint, pusher, channels, events"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broadcasting/auth": {
+            "post": {
+                "tags": [
+                    "Temps réel"
+                ],
+                "summary": "Autoriser un canal privé (Sanctum)",
+                "operationId": "dd9a54e98552f3dca1c8aef5a76c61e2",
+                "responses": {
+                    "200": {
+                        "description": "Auth canal"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/profile": {
+            "get": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Profil courant",
+                "operationId": "b861c92c5e545c4bf282e1c275d5f33b",
+                "responses": {
+                    "200": {
+                        "description": "Profil"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/profile/completeness": {
+            "get": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Complétude KYC",
+                "operationId": "1ae787e94c6e316fc1d062815e05d67b",
+                "responses": {
+                    "200": {
+                        "description": "Score KYC",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Completeness"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/update/password": {
+            "post": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Changer le mot de passe",
+                "operationId": "c38ce3dd2214b632f731304cf0f95ee9",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/update/profile/{user}": {
+            "post": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Mettre à jour le profil (KYC tardif)",
+                "operationId": "76b35d198cb2b13544a998f461b5122c",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profil"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/document": {
+            "post": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Uploader un document d’identité",
+                "operationId": "d2a5849f8bfdd739f42f7f202184dcd5",
+                "responses": {
+                    "200": {
+                        "description": "Document enregistré"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/{user}": {
+            "get": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Voir un utilisateur",
+                "operationId": "0653e464e90853d0c7501fd4c430905e",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profil public"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/add": {
+            "post": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Ajouter un utilisateur",
+                "operationId": "b96e9f03ac2e055bdfd0547f1944bd59",
+                "responses": {
+                    "200": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/fcm-token": {
+            "post": {
+                "tags": [
+                    "Profil"
+                ],
+                "summary": "Enregistrer le token FCM (push)",
+                "operationId": "28d29b7a4d71b57d88a1a87318bc79f1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fcm_token"
+                                ],
+                                "properties": {
+                                    "fcm_token": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Enregistré"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/payment/success": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Retour Wave succès (callback navigateur)",
+                "operationId": "346b3e03d6371d093583df7a34dedbcb",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/payment/error": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Retour Wave erreur (callback navigateur)",
+                "operationId": "8449ba7eb33ed2623cc461bf466d6bab",
+                "responses": {
+                    "200": {
+                        "description": "Erreur paiement"
+                    }
+                }
+            }
+        },
+        "/tontines/{tontine}/contribute": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Cotiser (checkout Wave historique)",
+                "operationId": "913d8a8304bb8393266ad1339ed061ee",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "wave_launch_url"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/contribution/initiate/{tontine}": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Initier une cotisation (alias PaymentService)",
+                "operationId": "8acd3362499075c66fd890d1ced4fdd0",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "provider": {
+                                        "type": "string",
+                                        "enum": [
+                                            "wave",
+                                            "orange_money"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session Wave"
+                    },
+                    "501": {
+                        "description": "OM_NOT_AVAILABLE"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/contribution/confirm/{tontine}": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Confirmer une session Wave (polling)",
+                "operationId": "bf485381e1d2e38ec4be302fff95626d",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "session_id"
+                                ],
+                                "properties": {
+                                    "session_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Confirmé"
+                    },
+                    "400": {
+                        "description": "Paiement non succeeded"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/wave/token": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Créer une session Wave (montant libre)",
+                "operationId": "255283a2d36f12029fb3992a4b8ac61a",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 1000
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "example": "XOF"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session Wave"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/contribution/{id}": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Détail d une cotisation",
+                "operationId": "07872ae0ec8005e987196fb95024fb7d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelire/payment/confirmed/{tirelire}": {
+            "post": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Confirmer le paiement d alimentation",
+                "operationId": "0ce088b82472ee43082334eb89cdc46d",
+                "parameters": [
+                    {
+                        "name": "tirelire",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Alimentée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/{tontine}/tirage": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Tirages de la tontine",
+                "operationId": "dfc6b9dbaf34c4e2851e4b321fd4e2b4",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tirages"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/{tontine}/listeVersements": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Liste des versements",
+                "operationId": "23e6d3e4e01ae7ad1718e7e68f1b28d3",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Versements"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/avenir": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Tontines à venir (places restantes)",
+                "operationId": "bc5b773788e897b577c1ff3037b6df37",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/expired": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Tontines arrivées à échéance",
+                "operationId": "1b388c655fc14008766dad157ab55b76",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/tirages": {
+            "post": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Programmer un tirage (proprio)",
+                "operationId": "962453b0f25f9b46fa58f916879c54d5",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "date_versement"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    },
+                                    "date_versement": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Programmé"
+                    },
+                    "403": {
+                        "description": "Pas le créateur"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/tirages/{tirage}/complete": {
+            "patch": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Marquer un tirage comme effectué",
+                "operationId": "3a92d92dc097d110391980074307105f",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tirage",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Complété"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/add-participant": {
+            "post": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Ajouter un participant (proprio)",
+                "operationId": "41a8fd8a6d0cb4ccc558a47710e75a1d",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ajouté"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/materiel/post": {
+            "post": {
+                "tags": [
+                    "Matériel"
+                ],
+                "summary": "Créer un matériel de tontine",
+                "operationId": "9e5552067ecf3a55b2932ae016ff76ad",
+                "responses": {
+                    "200": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/materiel/get": {
+            "get": {
+                "tags": [
+                    "Matériel"
+                ],
+                "summary": "Lister les matériels",
+                "operationId": "8e38a529c7c826d843475372ddf2393e",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/materiel/{materiel}/get": {
+            "get": {
+                "tags": [
+                    "Matériel"
+                ],
+                "summary": "Détail d un matériel",
+                "operationId": "b46f1e82eed80aec5829bdab0b540b2f",
+                "parameters": [
+                    {
+                        "name": "materiel",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/template": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Modèle CSV bénéficiaires",
+                "operationId": "bba1b4a59998d8c9f83d8ae3a97b8698",
+                "responses": {
+                    "200": {
+                        "description": "CSV"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Mutuelles créées / reçues",
+                "operationId": "8642f1566fc0608df382ab7320253d22",
+                "responses": {
+                    "200": {
+                        "description": "created + received"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Créer une mutuelle",
+                "operationId": "bf968a307fd1ef852ecc8755a64d758d",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    },
+                                    "objectif": {
+                                        "type": "string"
+                                    },
+                                    "taux_interet": {
+                                        "type": "number",
+                                        "example": 5
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Détail",
+                "operationId": "f4184652644537e502727ce5e8d3680c",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/preview": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Aperçu intérêts / dû",
+                "operationId": "5371848f2b072382d8494c26d6f2bc87",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preview"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/beneficiaires": {
+            "post": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Synchroniser les bénéficiaires",
+                "operationId": "11aeb76558361d1cdd65e8bc7c1c122a",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/import": {
+            "post": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Importer un CSV",
+                "operationId": "07db2cdd4a82c7f6619fddce616d7926",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Importé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/fund": {
+            "post": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Alimenter (checkout Wave)",
+                "operationId": "bf715f5d48a84c5fbc65a037aa8d263b",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "URL Wave"
+                    },
+                    "501": {
+                        "description": "OM_NOT_AVAILABLE"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/repay": {
+            "post": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Rembourser",
+                "operationId": "3ac006a1180c82e2ba2b670ba87212ea",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Remboursement"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/ledger": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Tableau de suivi JSON",
+                "operationId": "30252c9c903acbe5d4dac721dc29933d",
+                "responses": {
+                    "200": {
+                        "description": "rows"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/ledger/export.pdf": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Export PDF du suivi",
+                "operationId": "616aaddac02598daf22bee35615ba869",
+                "responses": {
+                    "200": {
+                        "description": "application/pdf"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/ledger/export.xlsx": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Export Excel du suivi",
+                "operationId": "c06808adc55135d16315fb563ae78a01",
+                "responses": {
+                    "200": {
+                        "description": "application/xlsx"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/export.xlsx": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Export Excel (membres, tirages, cotisations)",
+                "operationId": "ca806fb8201e892b190459a80bb495b9",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "application/xlsx"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/assemblee.pdf": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Procès-verbal d’assemblée (PDF)",
+                "operationId": "b9149d1001d4d10bb7fbd759e173f7ea",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "application/pdf"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/template.xlsx": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Modèle Excel bénéficiaires",
+                "operationId": "a571257a0c390f3bdf098d08c129eb95",
+                "responses": {
+                    "200": {
+                        "description": "application/xlsx"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/mutuelles/{mutuelle}/export.xlsx": {
+            "get": {
+                "tags": [
+                    "Mutuelle"
+                ],
+                "summary": "Export Excel de la mutuelle",
+                "operationId": "bb13d828730e24cf7f4ca26cf437a59a",
+                "parameters": [
+                    {
+                        "name": "mutuelle",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "application/xlsx"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Notifications in-app non lues",
+                "operationId": "447ffa9c368a395bd892cc24b144bb90",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/preferences": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Préférences push / SMS / e-mail",
+                "operationId": "7bba1c5dcbfa75c5e035ea6d5df21c49",
+                "responses": {
+                    "200": {
+                        "description": "Matrice",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "events": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NotificationPref"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Mettre à jour un type d’événement",
+                "operationId": "1b25d9362639d71417b6586a760f7d94",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "event"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "example": "rappel_cotisation"
+                                    },
+                                    "push": {
+                                        "type": "boolean"
+                                    },
+                                    "sms": {
+                                        "type": "boolean"
+                                    },
+                                    "email": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Enregistré"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/mark-as-read": {
+            "get": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Tout marquer lu",
+                "operationId": "50b66a5aa6d9a5fd5bd52e97b347d0fc",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/read/{id}": {
+            "post": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Marquer une notif lue",
+                "operationId": "dd853be270096edde6111eb50395b3fc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{id}": {
+            "delete": {
+                "tags": [
+                    "Suivi"
+                ],
+                "summary": "Supprimer une notification",
+                "operationId": "1ff50a716e23e4796eddf03ed2c5b3ae",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontines/create": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Créer une tontine catalogue",
+                "operationId": "56041bfcbc9a930af7554374c4f9b37d",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    },
+                                    "nombre_personne": {
+                                        "type": "integer"
+                                    },
+                                    "visibilite": {
+                                        "type": "string",
+                                        "enum": [
+                                            "catalogue",
+                                            "privee"
+                                        ]
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Catalogue"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/tontines/all": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Lister les tontines",
+                "operationId": "530ad1aab6713970e38086f4d609df6a",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/payments/initiate": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Initier une cotisation Wave",
+                "operationId": "b2ce0f61762d361e9abff26d1c8247b1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "tontine_id"
+                                ],
+                                "properties": {
+                                    "tontine_id": {
+                                        "type": "integer"
+                                    },
+                                    "provider": {
+                                        "type": "string",
+                                        "enum": [
+                                            "wave",
+                                            "orange_money"
+                                        ],
+                                        "example": "wave"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "URL Wave"
+                    },
+                    "501": {
+                        "description": "OM_NOT_AVAILABLE"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/webhooks/wave": {
+            "post": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Webhook Wave (HMAC Wave-Signature)",
+                "operationId": "849aac02ec3e0d48b6d5ec26edeb25a0",
+                "parameters": [
+                    {
+                        "name": "Wave-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Traité"
+                    },
+                    "401": {
+                        "description": "Signature invalide"
+                    }
+                }
+            }
+        },
+        "/receipts/{contribution}": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Télécharger le reçu PDF",
+                "operationId": "fc83704e960490d7152dd27ec1ca78f8",
+                "parameters": [
+                    {
+                        "name": "contribution",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "application/pdf"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/mycontributes": {
+            "get": {
+                "tags": [
+                    "Paiements"
+                ],
+                "summary": "Mes cotisations sur une tontine",
+                "operationId": "386808c492be5a8d7835438339b84943",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelire/create": {
+            "post": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Créer une tirelire + session Wave",
+                "operationId": "01f2870891763aa5b0c8b9489a6ea5fc",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "titre",
+                                    "montant",
+                                    "montant_objectif",
+                                    "date_fin"
+                                ],
+                                "properties": {
+                                    "titre": {
+                                        "type": "string"
+                                    },
+                                    "montant": {
+                                        "type": "number"
+                                    },
+                                    "montant_objectif": {
+                                        "type": "number"
+                                    },
+                                    "objectif": {
+                                        "type": "string"
+                                    },
+                                    "date_fin": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "payment_url"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelires/my-tirelires": {
+            "get": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Mes tirelires",
+                "operationId": "dc91c2294e96cd9d17e551a5eb64fbf8",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelires/{id}": {
+            "get": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Détail tirelire",
+                "operationId": "4ad781d670235b760b97b9e51d43d1f5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelires/{tirelire}/retrait/preview": {
+            "get": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Simulation retrait (échéance vs pénalité 5 %)",
+                "operationId": "f0467490f51a848f7dff681f4c7c33fd",
+                "parameters": [
+                    {
+                        "name": "tirelire",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quote"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelires/{tirelire}/retrait": {
+            "post": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Retirer (accept_penalty si anticipé)",
+                "operationId": "e0b37092e46f63795a37414ea8c4899b",
+                "parameters": [
+                    {
+                        "name": "tirelire",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "accept_penalty": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Retrait"
+                    },
+                    "422": {
+                        "description": "Pénalité non acceptée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelires/{tirelire}/retraits": {
+            "post": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Alias retrait",
+                "operationId": "6d0a7affacb0a27a6f2e84ec7d99d7d8",
+                "parameters": [
+                    {
+                        "name": "tirelire",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Retrait"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tirelire/{tirelire}/add": {
+            "post": {
+                "tags": [
+                    "Tirelire"
+                ],
+                "summary": "Alimenter la tirelire",
+                "operationId": "f5d4187c087ea9b9bbf527e6ac475415",
+                "parameters": [
+                    {
+                        "name": "tirelire",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "montant": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session Wave"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/create": {
+            "post": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Créer une tontine privée (proprio approved)",
+                "description": "KYC requis. Génère un code 6 caractères + payload WhatsApp. visibilite=privee.",
+                "operationId": "a5c9f51b60345fd7fdc190363aacea14",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom",
+                                    "nombre_personne",
+                                    "type",
+                                    "duree",
+                                    "montant",
+                                    "tirage"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string",
+                                        "example": "GIE Liberté 6"
+                                    },
+                                    "nombre_personne": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "argent"
+                                    },
+                                    "duree": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "montant": {
+                                        "type": "number",
+                                        "example": 120000
+                                    },
+                                    "tirage": {
+                                        "type": "string"
+                                    },
+                                    "date_demarrage": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créée + share"
+                    },
+                    "422": {
+                        "description": "PROFILE_INCOMPLETE ou dates"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/list": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Mes tontines (approved)",
+                "operationId": "f0f8ed9fdd4044d8f5fc6f665dce6062",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/filter": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Catalogue public (visibilite=catalogue)",
+                "operationId": "7f8e2681aed7658efbc3d16553103230",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "nom",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tontines catalogue"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/{tontine}/detail": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Détail d’une tontine",
+                "operationId": "3dec7bc375aa8bb8dd87b158f2ca585e",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/join-by-code": {
+            "post": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Aperçu par code (pas d’adhésion)",
+                "operationId": "acf1a67208ead3d7db3277a8cfee03a2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "example": "K7P2QM"
+                                    },
+                                    "code_adhesion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Preview + next POST /adhesions"
+                    },
+                    "404": {
+                        "description": "Code inconnu"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontine/adhesion": {
+            "post": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Alias de join-by-code (preview)",
+                "operationId": "eac3a8ca6d3a54d3616606fb6102e923",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "code_adhesion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Preview"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/tontines/{tontine}/share": {
+            "get": {
+                "tags": [
+                    "Tontines"
+                ],
+                "summary": "Régénérer le message WhatsApp",
+                "operationId": "4f54f6938708ee704d80e8d34a1c99e5",
+                "parameters": [
+                    {
+                        "name": "tontine",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Share",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "share": {
+                                            "$ref": "#/components/schemas/TontineShare"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Pas membre"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/adhesions": {
+            "post": {
+                "tags": [
+                    "Adhésions"
+                ],
+                "summary": "Déposer une demande (pending)",
+                "operationId": "9533f4dd69342c0728ac8000eae4edf2",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "tontine_id": {
+                                        "type": "integer"
+                                    },
+                                    "invitation_code": {
+                                        "type": "string"
+                                    },
+                                    "documents[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Demande envoyée"
+                    },
+                    "422": {
+                        "description": "KYC, capacité, déjà membre"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/adhesions/mine": {
+            "get": {
+                "tags": [
+                    "Adhésions"
+                ],
+                "summary": "Mes demandes",
+                "operationId": "a65b7aef16cecdae25c9ee9560f74ba8",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/adhesions/pending": {
+            "get": {
+                "tags": [
+                    "Adhésions"
+                ],
+                "summary": "File de validation",
+                "description": "Proprio : tontines privées. Admin : tout.",
+                "operationId": "9a7c92c08341954d8fa16a8363955d3e",
+                "responses": {
+                    "200": {
+                        "description": "Demandes pending"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/adhesions/{adhesion}/review": {
+            "post": {
+                "tags": [
+                    "Adhésions"
+                ],
+                "summary": "Approuver ou refuser",
+                "operationId": "13f83e1eb2068e4c7aa5a53fd346a911",
+                "parameters": [
+                    {
+                        "name": "adhesion",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "action"
+                                ],
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "approve",
+                                            "reject"
+                                        ]
+                                    },
+                                    "motif": {
+                                        "description": "Obligatoire si reject",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Traité"
+                    },
+                    "403": {
+                        "description": "Pas reviewer"
+                    },
+                    "422": {
+                        "description": "Motif manquant ou déjà traité"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/adhesions/{adhesion}": {
+            "patch": {
+                "tags": [
+                    "Adhésions"
+                ],
+                "summary": "Compléter une demande rejetée",
+                "operationId": "8762c4e7da1e0c7ad38070530242521e",
+                "parameters": [
+                    {
+                        "name": "adhesion",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Renvoyée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/adhesions/pending": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Alias pending (admin voit tout)",
+                "operationId": "1c8c1c92ccd773057b4cb8ae2cdbb672",
+                "responses": {
+                    "200": {
+                        "description": "Pending"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/adhesions/{adhesion}/review": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Alias review admin",
+                "operationId": "2a7c97cb0fc32a81f667de31ed23e579",
+                "parameters": [
+                    {
+                        "name": "adhesion",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Traité"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Message": {
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "TokenUser": {
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "example": "1|xxxxxxxx"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nom": {
+                        "type": "string"
+                    },
+                    "prenom": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "771234567"
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "statut": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Completeness": {
+                "properties": {
+                    "kyc_ready": {
+                        "type": "boolean"
+                    },
+                    "score": {
+                        "type": "integer"
+                    },
+                    "missing": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TontineShare": {
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "example": "K7P2QM"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "whatsapp": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Adhesion": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "statut": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ]
+                    },
+                    "badge": {
+                        "type": "string"
+                    },
+                    "motif_rejet": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "delai_estime": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "NotificationPref": {
+                "properties": {
+                    "event": {
+                        "type": "string",
+                        "example": "cotisation_versee"
+                    },
+                    "push": {
+                        "type": "boolean"
+                    },
+                    "sms": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Coller le plainTextToken de login / register",
+                "bearerFormat": "Sanctum",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "OTP, inscription, connexion, mot de passe"
+        },
+        {
+            "name": "Profil",
+            "description": "Compte, KYC, accueil"
+        },
+        {
+            "name": "Tontines",
+            "description": "Création, catalogue, invitations"
+        },
+        {
+            "name": "Adhésions",
+            "description": "Demandes pending, review proprio/admin"
+        },
+        {
+            "name": "Paiements",
+            "description": "Cotisations Wave, reçus, webhook"
+        },
+        {
+            "name": "Tirelire",
+            "description": "Épargne verrouillée, retrait avec pénalité"
+        },
+        {
+            "name": "Mutuelle",
+            "description": "Cagnotte, bénéficiaires, fonds, remboursement"
+        },
+        {
+            "name": "Suivi",
+            "description": "Ledger PDF, notifications"
+        },
+        {
+            "name": "Matériel",
+            "description": "Tontines matérielles et documents"
+        },
+        {
+            "name": "Admin",
+            "description": "Catalogue, utilisateurs, tarifs"
+        },
+        {
+            "name": "Temps réel",
+            "description": "Pusher / Echo, canaux privés"
+        }
+    ]
+}

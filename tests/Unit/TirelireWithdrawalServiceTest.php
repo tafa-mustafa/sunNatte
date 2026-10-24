@@ -14,7 +14,7 @@ class TirelireWithdrawalServiceTest extends TestCase
         return new TirelireWithdrawalService;
     }
 
-    public function test_early_withdrawal_applies_five_percent_penalty(): void
+    public function test_early_withdrawal_applies_ten_percent_penalty(): void
     {
         $tirelire = new Tirelire([
             'montant' => 10000,
@@ -27,9 +27,9 @@ class TirelireWithdrawalServiceTest extends TestCase
 
         $this->assertTrue($quote['early']);
         $this->assertTrue($quote['requires_penalty_acceptance']);
-        $this->assertEquals(0.05, $quote['rate']);
-        $this->assertEquals(500, $quote['penalty']);
-        $this->assertEquals(9500, $quote['net']);
+        $this->assertEquals(0.10, $quote['rate']);
+        $this->assertEquals(1000, $quote['penalty']);
+        $this->assertEquals(9000, $quote['net']);
         $this->assertEquals('penalite_retrait_anticipe', $quote['fee_type']);
     }
 
