@@ -14,6 +14,9 @@ class Transaction extends Model
         'session_id',
         'montant',
         'statut',
+        'commission',
+        'user_id',
+        'type',
     ];
 
     public function tirelire()

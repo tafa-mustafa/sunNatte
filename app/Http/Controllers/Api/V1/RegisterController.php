@@ -6,9 +6,8 @@ use Exception;
 use Validator;
 use App\Models\User;
 use App\Models\Number;
-use Twilio\Rest\Client;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -81,38 +80,23 @@ class RegisterController extends Controller
     $user->code_verification = $code;
     $user->save();
 
-    $account_sid = config("services.twilio.sid");
-    $auth_token = config("services.twilio.auth_token");
-    $twilio_number = config("services.twilio.from");
+    $sent = app(\App\Services\SmsGateway::class)->send(
+        $phoneNumber,
+        'Votre code Sunu Natt : '.$code
+    );
 
-    $client = new Client($account_sid,  $auth_token);
-
-    try {
-        $msg = 'Verify your code: ' . $code;
-
-        $message = $client->messages->create(
-            $phoneNumber,
-            [
-                'from' => $twilio_number, // Use the Twilio number from the configuration
-                'body' => "$msg !",
-            ]
-        );
-
-        $response = [
-            'success' => true,
-            'data' => $phoneNumber,
-            'message' => 'SMS Sent Successfully',
-        ];
-
-        return response()->json($response, 200);
-    } catch (\Exception $e) {
-        $response = [
+    if (! $sent) {
+        return response()->json([
             'success' => false,
-            'message' => 'SMS Sending Failed: ' . $e->getMessage(),
-        ];
-
-        return response()->json($response, 400);
+            'message' => 'SMS Sending Failed',
+        ], 400);
     }
+
+    return response()->json([
+        'success' => true,
+        'data' => $phoneNumber,
+        'message' => 'SMS Sent Successfully',
+    ], 200);
 }
 
 

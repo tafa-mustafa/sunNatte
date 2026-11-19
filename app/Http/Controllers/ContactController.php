@@ -33,14 +33,14 @@ class ContactController extends Controller
         try {
             Mail::raw($body, function ($message) use ($validated) {
                 $message->to('contact@teknon.sn')
-                        ->subject('Contact SUNUNATT — ' . $validated['subject'])
+                        ->subject('Contact SUNUNATT : ' . $validated['subject'])
                         ->replyTo($validated['email'], $validated['name']);
             });
 
-            return back()->with('success', 'Votre message a bien été envoyé ! Nous vous répondrons sous 48h.');
+            return back()->with('success', 'Votre message a bien été envoyé. Nous vous répondrons sous 48 h ouvrées.');
         } catch (\Exception $e) {
             return back()
-                ->with('error', 'Une erreur est survenue lors de l\'envoi. Écrivez-nous directement à contact@teknon.sn.')
+                ->with('error', 'L\'envoi a échoué. Veuillez nous écrire directement à contact@teknon.sn.')
                 ->withInput();
         }
     }

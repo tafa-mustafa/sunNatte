@@ -16,7 +16,8 @@ class Tirelire extends Model
         'date_debut',
         'date_fin',
         'user_id',
-        'montant_objectif'
+        'montant_objectif',
+        'statut',
     ];
 
     public function transactions()

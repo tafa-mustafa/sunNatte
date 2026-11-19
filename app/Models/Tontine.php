@@ -14,11 +14,14 @@ class Tontine extends Model
 {
     use HasFactory;
 
-    
+    public const VISIBILITE_PRIVEE = 'privee';
+    public const VISIBILITE_CATALOGUE = 'catalogue';
+
         protected $fillable = [
             'nom',
             'nombre_personne',
             'type',
+            'visibilite',
             'duree',
             'montant',
             'tirage',
@@ -30,15 +33,20 @@ class Tontine extends Model
             'description',
         ];
 
+    public function isPrivee(): bool
+    {
+        return ($this->visibilite ?? '') === self::VISIBILITE_PRIVEE;
+    }
+
       
     public function users(): BelongsToMany
 
     {
 
         return $this->belongsToMany(User::class, 'adhesions', 'tontine_id', 'user_id')
-        
-        ->withPivot('badge')
-                ->withTimestamps();
+            ->withPivot('badge', 'statut', 'motif_rejet')
+            ->withTimestamps()
+            ->wherePivot('statut', 'approved');
 
     }
     
