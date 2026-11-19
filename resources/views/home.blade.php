@@ -86,19 +86,15 @@
 <div class="stats-bar">
   <div class="stats-bar-inner">
     <div class="stat-bar-item reveal">
-      <div class="stat-bar-icon">📱</div>
       <div><div class="stat-bar-value">Wave</div><div class="stat-bar-label">Paiement mobile intégré, Orange Money à venir</div></div>
     </div>
     <div class="stat-bar-item reveal">
-      <div class="stat-bar-icon">🧾</div>
       <div><div class="stat-bar-value">Reçu PDF</div><div class="stat-bar-label">À chaque cotisation, suivi en temps réel</div></div>
     </div>
     <div class="stat-bar-item reveal">
-      <div class="stat-bar-icon">🔒</div>
       <div><div class="stat-bar-value">KYC + OTP</div><div class="stat-bar-label">Identité vérifiée, membres validés par le créateur</div></div>
     </div>
     <div class="stat-bar-item reveal">
-      <div class="stat-bar-icon">✓</div>
       <div><div class="stat-bar-value">Gratuit</div><div class="stat-bar-label">Téléchargement et inscription sans frais</div></div>
     </div>
   </div>
@@ -136,7 +132,7 @@
     <div class="section-intro reveal">
       <div class="section-label">Fonctionnalités</div>
       <h2 class="section-title">Tout pour épargner ensemble</h2>
-      <p class="section-sub">Tontine, tirelire, mutuelle : les outils essentiels, pensés pour le quotidien.</p>
+      <p class="section-sub">Tontine, tirelire, mutuelle — chaque outil fait une chose, et la fait bien.</p>
     </div>
     <div class="cards-grid">
       <div class="card reveal">
@@ -152,7 +148,7 @@
       <div class="card reveal">
         <div class="card-icon-wrap"><i class="fas fa-piggy-bank card-icon"></i></div>
         <h4>Tirelire digitale</h4>
-        <p>Épargnez avec un objectif et une échéance. Retrait anticipé possible avec une pénalité de 10 %, affichée avant confirmation.</p>
+        <p>Épargnez avec un objectif et une échéance. Retrait anticipé possible avec une pénalité de {{ (int) (config('tirelire.early_penalty_rate') * 100) }} %, affichée avant confirmation.</p>
       </div>
       <div class="card reveal">
         <div class="card-icon-wrap"><i class="fas fa-hand-holding-heart card-icon"></i></div>
@@ -177,7 +173,7 @@
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Témoignages</div>
-      <h2 class="section-title">Ils nous font confiance</h2>
+      <h2 class="section-title">Dakar, Lyon, Ziguinchor</h2>
     </div>
     <div class="testimonials-grid">
       <div class="testimonial-card reveal">
@@ -244,8 +240,8 @@
 
 <section id="cta-final">
   <div class="container">
-    <h2 class="reveal">Rejoignez des milliers de Sénégalais qui font confiance à SUNUNATT</h2>
-    <p class="reveal">Simple, transparent, accessible. Vos projets à portée de main.</p>
+    <h2 class="reveal">Votre tontine de famille démarre aujourd'hui.</h2>
+    <p class="reveal">Gratuit sur Android. iOS bientôt.</p>
     <a href="{{ config('tontine.play_store') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg reveal">
       Télécharger gratuitement
     </a>

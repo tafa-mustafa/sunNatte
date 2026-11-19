@@ -254,11 +254,13 @@ public function previewRetrait(Request $request, Tirelire $tirelire)
         return response()->json($blocked, $blocked['status']);
     }
 
+    $quote = $this->withdrawals->quote($tirelire, $montant);
+
     return response()->json([
-        'quote' => $this->withdrawals->quote($tirelire, $montant),
+        'quote' => $quote,
         'message' => $this->withdrawals->isMature($tirelire)
-            ? 'Retrait à l\'échéance : frais de 1,5 %.'
-            : 'Retrait anticipé : pénalité de 10 %. Confirmez avec accept_penalty=true.',
+            ? 'Retrait à l\'échéance : frais de '.$quote['rate_percent'].' %.'
+            : 'Retrait anticipé : pénalité de '.$quote['rate_percent'].' %. Confirmez avec accept_penalty=true.',
     ]);
 }
 

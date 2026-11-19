@@ -2,34 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\File;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OpenApiController extends Controller
 {
-    public function __invoke(?string $file = null): Response
+    public function __invoke(): BinaryFileResponse
     {
-        $name = $file ?: request('file', 'api-docs.json');
-        if ($name === '' || $name === '1' || ! is_string($name)) {
-            $name = 'api-docs.json';
-        }
-        if (! in_array($name, ['api-docs.json', 'api-docs.yaml'], true)) {
-            abort(404);
-        }
-
-        $candidates = [
+        foreach ([
             public_path('openapi.json'),
-            public_path($name),
-            storage_path('api-docs/'.$name),
-        ];
-
-        foreach ($candidates as $path) {
-            if (File::exists($path)) {
-                $mime = str_ends_with($name, '.yaml') ? 'application/yaml' : 'application/json';
-
-                return response(File::get($path), 200, [
-                    'Content-Type' => $mime,
-                    'Access-Control-Allow-Origin' => '*',
+            storage_path('api-docs/api-docs.json'),
+        ] as $path) {
+            if (is_file($path)) {
+                return response()->file($path, [
+                    'Content-Type' => 'application/json',
                     'Cache-Control' => 'no-cache',
                 ]);
             }

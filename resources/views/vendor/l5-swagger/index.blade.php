@@ -19,7 +19,7 @@
     window.onload = function () {
         window.ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
-            url: '/openapi.json',
+            url: '{{ route('openapi.json') }}',
             validatorUrl: null,
             presets: [
                 SwaggerUIBundle.presets.apis,
