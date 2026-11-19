@@ -48,7 +48,7 @@ class PaymentController extends Controller
         $status = $data['payment_status'] ?? '';
         $type = $event['type'] ?? '';
 
-        if ($status !== 'succeeded' && $type !== 'checkout.session.completed') {
+        if ($status !== 'succeeded' || $type !== 'checkout.session.completed') {
             return response()->json(['ok' => true, 'ignored' => true]);
         }
 

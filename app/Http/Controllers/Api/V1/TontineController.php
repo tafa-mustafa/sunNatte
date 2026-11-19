@@ -240,7 +240,8 @@ class TontineController extends Controller
           $users = auth()->user();
         $badgeActuel = $users->adhesions()->where('tontine_id', $tontine->id)->value('badge');
 
-        if (!$tontine->users->contains($users)) {
+        $alreadyMember = $tontine->users()->withoutGlobalScopes()->where('users.id', $users->id)->exists();
+        if (! $alreadyMember) {
 
             $tontine->users()->attach($users->id, [
                 'badge' => 'membre',

@@ -13,6 +13,8 @@ use App\Notifications\DemandeValidatedNotification;
 use App\Services\AdhesionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class AdhesionController extends Controller
@@ -253,12 +255,12 @@ class AdhesionController extends Controller
         }
 
         foreach ($request->file('documents') as $file) {
-            $fileName = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('documents'), $fileName);
+            $fileName = Str::uuid().'.'.$file->getClientOriginalExtension();
+            $path = $file->storeAs('documents/'.$user->id, $fileName, 'local');
 
             Document::create([
                 'nom' => $file->getClientOriginalName(),
-                'document' => 'documents/'.$fileName,
+                'document' => $path,
                 'user_id' => $user->id,
                 'adhesion_id' => $adhesion->id,
             ]);

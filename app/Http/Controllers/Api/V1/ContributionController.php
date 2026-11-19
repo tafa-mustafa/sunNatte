@@ -251,22 +251,42 @@ public function confirmPayment(Request $request, Tontine $tontine)
         return response()->json(['error' => 'Le paiement est '.$status.'. Veuillez réessayer ou patienter.'], 400);
     }
 
-    $payments = app(PaymentService::class);
-    Contribution::firstOrCreate(
-        ['transaction_id' => $session_id],
-        [
-            'user_id' => $user->id,
-            'tontine_id' => $tontine->id,
-            'montant' => $amount ?: $payments->amountDue($tontine),
-            'statut' => 'pending',
-            'provider' => 'wave',
-        ]
-    );
+    $now = now();
+    $alreadyContributed = $tontine->contributions()
+        ->where('user_id', $user->id)
+        ->where('statut', 'succeeded')
+        ->whereYear('date_contribution', $now->year)
+        ->whereMonth('date_contribution', $now->month)
+        ->exists();
 
+    if ($alreadyContributed) {
+        return response()->json(['message' => 'Vous avez déjà contribué ce mois-ci à cette tontine.'], 422);
+    }
+
+    $payments = app(PaymentService::class);
+    DB::beginTransaction();
     try {
+        Contribution::firstOrCreate(
+            ['transaction_id' => $session_id],
+            [
+                'user_id' => $user->id,
+                'tontine_id' => $tontine->id,
+                'montant' => $amount ?: $payments->amountDue($tontine),
+                'statut' => 'pending',
+                'provider' => 'wave',
+            ]
+        );
+
         $contribution = $payments->settleSession($session_id, $amount ?: $payments->amountDue($tontine));
+        DB::commit();
     } catch (\RuntimeException $e) {
+        DB::rollBack();
+
         return response()->json(['error' => $e->getMessage()], 404);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json(['error' => 'Erreur lors de l\'enregistrement de la contribution.'], 500);
     }
 
     return response()->json([

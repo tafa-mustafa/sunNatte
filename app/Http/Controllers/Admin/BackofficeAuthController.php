@@ -34,6 +34,8 @@ class BackofficeAuthController extends Controller
 
         if ((int) Auth::user()->role_id !== User::ROLE_ADMIN) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return back()->withErrors(['login' => 'Accès réservé aux administrateurs.']);
         }

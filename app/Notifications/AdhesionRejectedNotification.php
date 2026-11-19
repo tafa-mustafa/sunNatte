@@ -28,7 +28,7 @@ class AdhesionRejectedNotification extends Notification
             'tontine_id' => $this->adhesion->tontine_id,
             'statut' => 'rejected',
             'type' => 'adhesion_rejetee',
-            'message' => 'Demande refusée : '.$this->adhesion->motif_rejet,
+            'message' => 'Demande refusée : '.($this->adhesion->motif_rejet ?? 'Aucun motif fourni'),
             'motif' => $this->adhesion->motif_rejet,
             'tontine' => $nom,
         ];
