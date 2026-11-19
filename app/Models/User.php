@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\{Tontine, Adhesion};
+use App\Models\{Tontine, Adhesion, Calebasse};
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -93,6 +93,13 @@ public function tirelires()
 public function mutuelles()
 {
     return $this->hasMany(Mutuelle::class, 'createur_id');
+}
+
+public function calebasses(): BelongsToMany
+{
+    return $this->belongsToMany(Calebasse::class, 'calebasse_user')
+        ->withPivot('badge')
+        ->withTimestamps();
 }
 
 }

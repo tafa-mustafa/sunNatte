@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\Admin\TarifController;
 use App\Http\Controllers\Api\V1\ContributionController;
+use App\Http\Controllers\Api\V1\CabebaseController;
 use App\Http\Controllers\Api\V1\{LoginController, RegisterController, UserController,ForgotPasswordController, TontineController,TirelireController};
 
 /*
@@ -169,6 +170,16 @@ Route::middleware('admin')->group(function () {
     Route::patch('admin/users/{id}/deactivate', [AdminController::class, 'desactive_user']);
 });
 
+
+/****************Calebasse ***********************************/
+
+Route::get('/calebasses', [CabebaseController::class, 'index']);
+Route::post('/calebasses', [CabebaseController::class, 'store']);
+Route::post('/calebasses/join', [CabebaseController::class, 'join']);
+Route::get('/calebasses/{calebasse}', [CabebaseController::class, 'show']);
+Route::post('/calebasses/{calebasse}/cotiser', [CabebaseController::class, 'cotiser']);
+Route::post('/calebasses/{calebasse}/confirm', [CabebaseController::class, 'confirm']);
+Route::patch('/calebasses/{calebasse}/close', [CabebaseController::class, 'close']);
 
 /**********************NOTIFICATION */
     Route::get('notifications', [UserController::class, 'list']);
